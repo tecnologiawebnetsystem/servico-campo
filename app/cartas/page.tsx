@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { ArrowLeft, Plus, Eye, Trash2, Mail, Edit } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import ConfirmDialog from "@/components/confirm-dialog"
 
 interface Carta {
   id: number
@@ -24,6 +25,8 @@ export default function CartasPage() {
   const [editingCarta, setEditingCarta] = useState<Carta | null>(null)
   const [titulo, setTitulo] = useState("")
   const [texto, setTexto] = useState("")
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
+  const [cartaToDelete, setCartaToDelete] = useState<number | null>(null)
 
   const usuarioId = "1"
 
@@ -98,10 +101,15 @@ export default function CartasPage() {
   }
 
   const handleDelete = async (id: number) => {
-    if (!confirm("Deseja realmente excluir esta carta?")) return
+    setCartaToDelete(id)
+    setDeleteConfirmOpen(true)
+  }
+
+  const confirmDelete = async () => {
+    if (!cartaToDelete) return
 
     try {
-      const res = await fetch(`/api/cartas?id=${id}&usuarioId=${usuarioId}`, {
+      const res = await fetch(`/api/cartas?id=${cartaToDelete}&usuarioId=${usuarioId}`, {
         method: "DELETE",
       })
 
@@ -110,6 +118,8 @@ export default function CartasPage() {
       }
     } catch (error) {
       console.error("Erro ao deletar carta:", error)
+    } finally {
+      setCartaToDelete(null)
     }
   }
 
@@ -247,6 +257,17 @@ export default function CartasPage() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        {/* Confirm Dialog */}
+        <ConfirmDialog
+          open={deleteConfirmOpen}
+          onOpenChange={setDeleteConfirmOpen}
+          title="Excluir Carta"
+          description="Deseja realmente excluir esta carta? Esta ação não pode ser desfeita."
+          onConfirm={confirmDelete}
+          confirmText="Excluir"
+          cancelText="Cancelar"
+        />
       </div>
     </div>
   )

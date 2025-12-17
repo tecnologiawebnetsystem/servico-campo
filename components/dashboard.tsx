@@ -15,11 +15,13 @@ import {
   WifiOff,
   Wifi,
   Mail,
+  Clipboard,
 } from "lucide-react"
 import AddHoursDialog from "@/components/add-hours-dialog"
 import BibleStudiesDialog from "@/components/bible-studies-dialog"
 import HoursGrid from "@/components/hours-grid"
 import Link from "next/link"
+import AnotacoesDialog from "@/components/anotacoes-dialog"
 import {
   isOnline,
   addOfflineAction,
@@ -60,6 +62,7 @@ export default function Dashboard({ onLogout, usuario }: DashboardProps) {
   const [editingEntry, setEditingEntry] = useState<HourEntry | null>(null)
   const [online, setOnline] = useState(true)
   const [syncing, setSyncing] = useState(false)
+  const [isAnotacoesDialogOpen, setIsAnotacoesDialogOpen] = useState(false)
 
   const monthNames = [
     "Janeiro",
@@ -391,6 +394,12 @@ export default function Dashboard({ onLogout, usuario }: DashboardProps) {
 
   const pendingActions = getOfflineQueue().length
 
+  const handleEdit = (entry: HourEntry) => {
+    console.log("[v0] Abrindo edição para:", entry)
+    setEditingEntry(entry)
+    setIsDialogOpen(true)
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-gray-50 to-slate-100 py-4 md:py-8">
       <div className="max-w-5xl mx-auto bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden">
@@ -536,6 +545,14 @@ export default function Dashboard({ onLogout, usuario }: DashboardProps) {
               Exemplos de Cartas
             </Link>
 
+            <Button
+              onClick={() => setIsAnotacoesDialogOpen(true)}
+              className="gap-2 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white shadow-lg px-6 h-16 text-base font-semibold"
+            >
+              <Clipboard className="w-5 h-5" />
+              Anotações
+            </Button>
+
             <a
               href="https://jworg.zoom.us/j/84813202624"
               target="_blank"
@@ -552,7 +569,7 @@ export default function Dashboard({ onLogout, usuario }: DashboardProps) {
 
           {/* Hours Grid */}
           <div>
-            <HoursGrid entries={entries} onDelete={handleDeleteEntry} onEdit={handleEditEntry} />
+            <HoursGrid entries={entries} onDelete={handleDeleteEntry} onEdit={handleEdit} />
           </div>
         </div>
       </div>
@@ -560,7 +577,12 @@ export default function Dashboard({ onLogout, usuario }: DashboardProps) {
       {/* Dialogs */}
       <AddHoursDialog
         open={isDialogOpen}
-        onOpenChange={setIsDialogOpen}
+        onOpenChange={(open) => {
+          setIsDialogOpen(open)
+          if (!open) {
+            setEditingEntry(null)
+          }
+        }}
         onAdd={handleAddEntry}
         onEdit={handleEditEntry}
         editingEntry={editingEntry}
@@ -575,6 +597,8 @@ export default function Dashboard({ onLogout, usuario }: DashboardProps) {
         currentYear={currentYear}
         usuarioId={usuario.id}
       />
+
+      <AnotacoesDialog open={isAnotacoesDialogOpen} onOpenChange={setIsAnotacoesDialogOpen} usuarioId={usuario.id} />
     </div>
   )
 }

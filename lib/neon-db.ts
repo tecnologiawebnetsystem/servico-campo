@@ -38,6 +38,14 @@ export interface Carta {
   updated_at: string
 }
 
+export interface Anotacao {
+  id: number
+  usuario_id: number
+  titulo: string
+  descricao: string
+  data_criacao: string
+}
+
 // Funções de autenticação
 export async function loginUsuario(pin: string): Promise<Usuario | null> {
   const usuarios = await sql`
@@ -168,4 +176,39 @@ export async function getCartaById(id: number, usuarioId: number): Promise<Carta
     LIMIT 1
   `
   return (cartas[0] as Carta) || null
+}
+
+// Funções de anotações
+export async function getAnotacoes(usuarioId: number): Promise<Anotacao[]> {
+  const anotacoes = await sql`
+    SELECT * FROM anotacoes 
+    WHERE usuario_id = ${usuarioId}
+    ORDER BY data_criacao DESC
+  `
+  return anotacoes as Anotacao[]
+}
+
+export async function insertAnotacao(usuarioId: number, titulo: string, descricao: string): Promise<Anotacao> {
+  const anotacoes = await sql`
+    INSERT INTO anotacoes (usuario_id, titulo, descricao)
+    VALUES (${usuarioId}, ${titulo}, ${descricao})
+    RETURNING *
+  `
+  return anotacoes[0] as Anotacao
+}
+
+export async function deleteAnotacao(id: number, usuarioId: number): Promise<void> {
+  await sql`
+    DELETE FROM anotacoes 
+    WHERE id = ${id} AND usuario_id = ${usuarioId}
+  `
+}
+
+export async function getAnotacaoById(id: number, usuarioId: number): Promise<Anotacao | null> {
+  const anotacoes = await sql`
+    SELECT * FROM anotacoes 
+    WHERE id = ${id} AND usuario_id = ${usuarioId}
+    LIMIT 1
+  `
+  return (anotacoes[0] as Anotacao) || null
 }

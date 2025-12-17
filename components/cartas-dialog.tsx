@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Card } from "@/components/ui/card"
 import { Plus, Mail, Trash2, Eye } from "lucide-react"
 import { isOnline, addOfflineAction, saveOfflineData, getOfflineData } from "@/lib/offline-sync"
+import ConfirmDialog from "@/components/confirm-dialog"
 
 interface Carta {
   id: number
@@ -29,6 +30,8 @@ export default function CartasDialog({ open, onOpenChange, usuarioId }: CartasDi
   const [titulo, setTitulo] = useState("")
   const [texto, setTexto] = useState("")
   const [loading, setLoading] = useState(false)
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
+  const [cartaToDelete, setCartaToDelete] = useState<number | null>(null)
   const online = isOnline()
 
   useEffect(() => {
@@ -107,24 +110,32 @@ export default function CartasDialog({ open, onOpenChange, usuarioId }: CartasDi
   }
 
   const handleDeleteCarta = async (id: number) => {
-    if (!confirm("Deseja realmente excluir esta carta?")) return
+    setCartaToDelete(id)
+    setDeleteConfirmOpen(true)
+  }
 
-    const updatedCartas = cartas.filter((c) => c.id !== id)
+  const confirmDelete = async () => {
+    if (!cartaToDelete) return
+
+    const updatedCartas = cartas.filter((c) => c.id !== cartaToDelete)
     setCartas(updatedCartas)
     saveOfflineData(`cartas_${usuarioId}`, updatedCartas)
 
     if (!online) {
-      addOfflineAction("DELETE_CARTA", { id })
+      addOfflineAction("DELETE_CARTA", { id: cartaToDelete })
+      setCartaToDelete(null)
       return
     }
 
     try {
-      await fetch(`/api/cartas?id=${id}&usuarioId=${usuarioId}`, {
+      await fetch(`/api/cartas?id=${cartaToDelete}&usuarioId=${usuarioId}`, {
         method: "DELETE",
       })
     } catch (error) {
       console.error("Erro ao deletar carta:", error)
-      addOfflineAction("DELETE_CARTA", { id })
+      addOfflineAction("DELETE_CARTA", { id: cartaToDelete })
+    } finally {
+      setCartaToDelete(null)
     }
   }
 
@@ -256,6 +267,17 @@ export default function CartasDialog({ open, onOpenChange, usuarioId }: CartasDi
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Confirm Dialog */}
+      <ConfirmDialog
+        open={deleteConfirmOpen}
+        onOpenChange={setDeleteConfirmOpen}
+        title="Excluir Carta"
+        description="Deseja realmente excluir esta carta? Esta ação não pode ser desfeita."
+        onConfirm={confirmDelete}
+        confirmText="Excluir"
+        cancelText="Cancelar"
+      />
     </>
   )
 }
