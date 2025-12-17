@@ -75,59 +75,65 @@ export default function PinLogin({ onLogin }: PinLoginProps) {
       </div>
 
       <div className="w-full max-w-sm space-y-6 relative z-10">
-        <div className="text-center space-y-3">
-          <div className="mb-4">
-            <div className="inline-block p-4 bg-gradient-to-br from-pink-400 to-rose-500 rounded-2xl shadow-lg">
-              <Book className="w-12 h-12 text-white" />
+        <div className="text-center mb-4">
+          <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-pink-600 to-rose-600 tracking-wide font-serif">
+            Serviço de Campo
+          </h1>
+        </div>
+
+        <div className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-2xl border-4 border-pink-200 p-8">
+          <div className="text-center space-y-3">
+            <div className="mb-4">
+              <div className="inline-block p-4 bg-gradient-to-br from-pink-400 to-rose-500 rounded-2xl shadow-lg">
+                <Book className="w-12 h-12 text-white" />
+              </div>
+            </div>
+            <h1 className="text-xl font-semibold text-rose-900">Digite seu PIN de 6 dígitos</h1>
+
+            {/* PIN Dots */}
+            <div className="flex justify-center gap-2">
+              {[0, 1, 2, 3, 4, 5].map((index) => (
+                <div
+                  key={index}
+                  className={`w-2.5 h-2.5 rounded-full transition-colors ${
+                    error ? "bg-red-500" : index < pin.length ? "bg-rose-500" : "bg-pink-200"
+                  }`}
+                />
+              ))}
             </div>
           </div>
-          <h1 className="text-xl font-semibold text-rose-900">Digite seu PIN de 6 dígitos</h1>
 
-          {/* PIN Dots */}
-          <div className="flex justify-center gap-2">
-            {[0, 1, 2, 3, 4, 5].map((index) => (
-              <div
-                key={index}
-                className={`w-2.5 h-2.5 rounded-full transition-colors ${
-                  error ? "bg-red-500" : index < pin.length ? "bg-rose-500" : "bg-pink-200"
-                }`}
-              />
+          <div className="grid grid-cols-3 gap-2 mt-6">
+            {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
+              <Button
+                key={num}
+                variant="outline"
+                size="lg"
+                onClick={() => handleNumberClick(num.toString())}
+                className="h-14 text-xl font-semibold bg-white hover:bg-pink-50 border-pink-200 text-rose-900 shadow-sm"
+              >
+                {num}
+              </Button>
             ))}
-          </div>
-        </div>
-
-        <div className="grid grid-cols-3 gap-2">
-          {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
+            <div />
             <Button
-              key={num}
               variant="outline"
               size="lg"
-              onClick={() => handleNumberClick(num.toString())}
+              onClick={() => handleNumberClick("0")}
               className="h-14 text-xl font-semibold bg-white hover:bg-pink-50 border-pink-200 text-rose-900 shadow-sm"
             >
-              {num}
+              0
             </Button>
-          ))}
-          <div />
-          <Button
-            variant="outline"
-            size="lg"
-            onClick={() => handleNumberClick("0")}
-            className="h-14 text-xl font-semibold bg-white hover:bg-pink-50 border-pink-200 text-rose-900 shadow-sm"
-          >
-            0
-          </Button>
-          <Button
-            variant="outline"
-            size="lg"
-            onClick={handleDelete}
-            className="h-14 bg-white hover:bg-pink-50 border-pink-200 shadow-sm"
-          >
-            <Delete className="w-5 h-5 text-rose-700" />
-          </Button>
+            <Button
+              variant="outline"
+              size="lg"
+              onClick={handleDelete}
+              className="h-14 bg-white hover:bg-pink-50 border-pink-200 shadow-sm"
+            >
+              <Delete className="w-5 h-5 text-rose-700" />
+            </Button>
+          </div>
         </div>
-
-        <p className="text-center text-xs text-rose-700">Serviço de Campo</p>
       </div>
     </div>
   )

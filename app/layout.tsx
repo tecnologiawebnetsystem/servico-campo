@@ -10,7 +10,6 @@ const _geistMono = Geist_Mono({ subsets: ["latin"] })
 export const metadata: Metadata = {
   title: "Serviço de Campo - Registro de Horas",
   description: "Sistema de cadastro de horas de serviço de campo e estudos bíblicos",
-  generator: "v0.app",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
@@ -19,25 +18,13 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
-      {
-        url: "/icon-light-32x32.png",
-        media: "(prefers-color-scheme: light)",
-      },
-      {
-        url: "/icon-dark-32x32.png",
-        media: "(prefers-color-scheme: dark)",
-      },
-      {
-        url: "/icon.svg",
-        type: "image/svg+xml",
-      },
+      { url: "/icon-192.jpg", sizes: "192x192", type: "image/jpeg" },
+      { url: "/icon-512.jpg", sizes: "512x512", type: "image/jpeg" },
     ],
-    apple: [
-      { url: "/apple-icon.png" },
-      { url: "/icon-192.jpg", sizes: "192x192" },
-      { url: "/icon-512.jpg", sizes: "512x512" },
-    ],
+    apple: [{ url: "/apple-icon.png", sizes: "180x180", type: "image/png" }],
+    shortcut: [{ url: "/icon-192.jpg" }],
   },
+    generator: 'v0.app'
 }
 
 export const viewport: Viewport = {
@@ -55,6 +42,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-BR">
+      <head>
+        <link rel="icon" href="/icon-192.jpg" type="image/jpeg" />
+        <link rel="apple-touch-icon" href="/apple-icon.png" />
+      </head>
       <body className={`font-sans antialiased`}>
         {children}
         <Analytics />

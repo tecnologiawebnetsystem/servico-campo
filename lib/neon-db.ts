@@ -29,6 +29,15 @@ export interface EstudoBiblico {
   updated_at: string
 }
 
+export interface Carta {
+  id: number
+  usuario_id: number
+  titulo: string
+  texto: string
+  created_at: string
+  updated_at: string
+}
+
 // Funções de autenticação
 export async function loginUsuario(pin: string): Promise<Usuario | null> {
   const usuarios = await sql`
@@ -114,4 +123,49 @@ export async function updateEstudoBiblico(
     ON CONFLICT (usuario_id, mes, ano) 
     DO UPDATE SET quantidade = ${quantidade}, updated_at = CURRENT_TIMESTAMP
   `
+}
+
+// Funções de cartas
+export async function getCartas(usuarioId: number): Promise<Carta[]> {
+  const cartas = await sql`
+    SELECT * FROM cartas 
+    WHERE usuario_id = ${usuarioId}
+    ORDER BY created_at DESC
+  `
+  return cartas as Carta[]
+}
+
+export async function insertCarta(usuarioId: number, titulo: string, texto: string): Promise<Carta> {
+  const cartas = await sql`
+    INSERT INTO cartas (usuario_id, titulo, texto)
+    VALUES (${usuarioId}, ${titulo}, ${texto})
+    RETURNING *
+  `
+  return cartas[0] as Carta
+}
+
+export async function deleteCarta(id: number, usuarioId: number): Promise<void> {
+  await sql`
+    DELETE FROM cartas 
+    WHERE id = ${id} AND usuario_id = ${usuarioId}
+  `
+}
+
+export async function updateCarta(id: number, usuarioId: number, titulo: string, texto: string): Promise<Carta> {
+  const cartas = await sql`
+    UPDATE cartas 
+    SET titulo = ${titulo}, texto = ${texto}, updated_at = CURRENT_TIMESTAMP
+    WHERE id = ${id} AND usuario_id = ${usuarioId}
+    RETURNING *
+  `
+  return cartas[0] as Carta
+}
+
+export async function getCartaById(id: number, usuarioId: number): Promise<Carta | null> {
+  const cartas = await sql`
+    SELECT * FROM cartas 
+    WHERE id = ${id} AND usuario_id = ${usuarioId}
+    LIMIT 1
+  `
+  return (cartas[0] as Carta) || null
 }
