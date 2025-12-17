@@ -208,11 +208,11 @@ export default function CartasPage() {
 
         {/* Dialog Nova/Editar Carta */}
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogContent className="bg-white border-indigo-200 max-w-2xl">
+          <DialogContent className="bg-white border-indigo-200 max-w-2xl max-h-[85vh] flex flex-col">
             <DialogHeader>
               <DialogTitle className="text-indigo-900">{editingCarta ? "Editar Carta" : "Nova Carta"}</DialogTitle>
             </DialogHeader>
-            <div className="space-y-4 py-4">
+            <div className="space-y-4 py-4 overflow-y-auto flex-1">
               <div>
                 <label className="text-sm font-medium text-indigo-900 mb-2 block">Título da Carta</label>
                 <Input
@@ -233,7 +233,7 @@ export default function CartasPage() {
                 />
               </div>
             </div>
-            <DialogFooter>
+            <DialogFooter className="flex-shrink-0">
               <Button variant="outline" onClick={() => setIsDialogOpen(false)} className="border-gray-300">
                 Cancelar
               </Button>
