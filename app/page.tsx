@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import PinLogin from "@/components/pin-login"
 import Dashboard from "@/components/dashboard"
+import { registerServiceWorker } from "@/lib/register-sw"
 
 interface Usuario {
   id: number
@@ -17,6 +18,8 @@ export default function Home() {
     if (usuarioArmazenado) {
       setUsuario(JSON.parse(usuarioArmazenado))
     }
+
+    registerServiceWorker()
   }, [])
 
   const handleLogin = (usuarioLogado: Usuario) => {

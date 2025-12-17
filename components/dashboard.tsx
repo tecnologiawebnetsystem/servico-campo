@@ -29,6 +29,7 @@ import {
   saveOfflineData,
   getOfflineData,
 } from "@/lib/offline-sync"
+import OnlineStatus from "@/components/online-status"
 
 export interface HourEntry {
   id: string
@@ -391,174 +392,189 @@ export default function Dashboard({ onLogout, usuario }: DashboardProps) {
   const pendingActions = getOfflineQueue().length
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-pink-50 via-blue-50 to-sky-50 pb-6">
-      <div className="max-w-4xl mx-auto p-3 md:p-6 space-y-4">
-        {!online && (
-          <div className="bg-amber-100 border border-amber-300 text-amber-800 px-4 py-2 rounded-lg flex items-center gap-2 text-sm">
-            <WifiOff className="w-4 h-4" />
-            <span>Modo Offline - {pendingActions} ação(ões) pendente(s) de sincronização</span>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-gray-50 to-slate-100 py-4 md:py-8">
+      <div className="max-w-5xl mx-auto bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden">
+        <div className="bg-gradient-to-br from-pink-50 via-blue-50 to-sky-50 px-4 md:px-6 py-4 border-b border-gray-200">
+          <div className="flex justify-end mb-3">
+            <OnlineStatus
+              usuarioId={usuario.id}
+              onSyncComplete={() => {
+                fetchHoras()
+                fetchEstudos()
+              }}
+            />
           </div>
-        )}
 
-        {syncing && (
-          <div className="bg-blue-100 border border-blue-300 text-blue-800 px-4 py-2 rounded-lg flex items-center gap-2 text-sm">
-            <Wifi className="w-4 h-4 animate-pulse" />
-            <span>Sincronizando dados...</span>
-          </div>
-        )}
+          {!online && (
+            <div className="bg-amber-100 border border-amber-300 text-amber-800 px-4 py-2 rounded-lg flex items-center gap-2 text-sm mb-3">
+              <WifiOff className="w-4 h-4" />
+              <span>Modo Offline - {pendingActions} ação(ões) pendente(s) de sincronização</span>
+            </div>
+          )}
 
-        {/* Header */}
-        <div className="flex justify-between items-start flex-wrap gap-3">
-          <div className="flex gap-3 items-center">
-            <div className="p-2 bg-gradient-to-br from-pink-400 to-rose-500 rounded-xl shadow-md">
-              <BookOpen className="w-5 h-5 md:w-6 md:h-6 text-white" />
+          {syncing && (
+            <div className="bg-blue-100 border border-blue-300 text-blue-800 px-4 py-2 rounded-lg flex items-center gap-2 text-sm mb-3">
+              <Wifi className="w-4 h-4 animate-pulse" />
+              <span>Sincronizando dados...</span>
             </div>
-            <div>
-              <h1 className="text-xl md:text-2xl font-bold text-rose-900">Bem-vinda, {usuario.nome}</h1>
-              <p className="text-xs md:text-sm text-rose-700">Registre suas horas de serviço</p>
-            </div>
-          </div>
-          <Button variant="ghost" size="sm" onClick={onLogout} className="text-rose-700 hover:bg-pink-100">
-            <LogOut className="w-4 h-4 mr-2" />
-            Sair
-          </Button>
-        </div>
+          )}
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
-          <Card className="p-4 bg-gradient-to-br from-pink-100 to-rose-100 border-pink-200 relative overflow-hidden shadow-md">
-            <div className="absolute top-2 right-2 opacity-10">
-              <BookOpen className="w-12 h-12 md:w-16 md:h-16 text-rose-500" />
-            </div>
-            <div className="space-y-1 relative z-10">
-              <p className="text-xs text-rose-700 font-medium">Total de Horas</p>
-              <p className="text-2xl md:text-3xl font-bold text-rose-900">
-                {entries.reduce((sum, entry) => sum + entry.hours, 0).toFixed(2)}h
-              </p>
-            </div>
-          </Card>
-          <Card className="p-4 bg-gradient-to-br from-sky-100 to-blue-100 border-blue-200 relative overflow-hidden shadow-md">
-            <div className="absolute top-2 right-2 opacity-10">
-              <Users className="w-12 h-12 md:w-16 md:h-16 text-blue-500" />
-            </div>
-            <div className="space-y-1 relative z-10">
-              <p className="text-xs text-blue-700 font-medium">Faltam</p>
-              <p className="text-2xl md:text-3xl font-bold text-blue-900">
-                {Math.max(0, 30 - entries.reduce((sum, entry) => sum + entry.hours, 0)).toFixed(2)}h
-              </p>
-              <p className="text-[10px] text-blue-600">Meta: 30 horas/mês</p>
-            </div>
-          </Card>
-          <Card className="p-4 bg-gradient-to-br from-purple-100 to-pink-100 border-purple-200 relative overflow-hidden shadow-md col-span-2 md:col-span-1">
-            <div className="space-y-1 relative z-10">
-              <p className="text-xs text-purple-700 font-medium">Estudos Bíblicos</p>
-              <div className="flex items-center justify-between gap-3">
-                <p className="text-2xl md:text-3xl font-bold text-purple-900">{bibleStudiesCount}</p>
-                <div className="flex gap-2">
-                  <Button
-                    size="icon"
-                    variant="outline"
-                    onClick={() => handleDecrementStudies()}
-                    disabled={bibleStudiesCount <= 0}
-                    className="h-8 w-8 rounded-full bg-white hover:bg-purple-50 border-purple-300 text-purple-700 disabled:opacity-40"
-                  >
-                    <Minus className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    size="icon"
-                    variant="outline"
-                    onClick={() => handleIncrementStudies()}
-                    className="h-8 w-8 rounded-full bg-white hover:bg-purple-50 border-purple-300 text-purple-700"
-                  >
-                    <Plus className="w-4 h-4" />
-                  </Button>
-                </div>
+          {/* Header */}
+          <div className="flex justify-between items-start flex-wrap gap-3">
+            <div className="flex gap-3 items-center">
+              <div className="p-2 bg-gradient-to-br from-pink-400 to-rose-500 rounded-xl shadow-md">
+                <BookOpen className="w-5 h-5 md:w-6 md:h-6 text-white" />
+              </div>
+              <div>
+                <h1 className="text-xl md:text-2xl font-bold text-rose-900">Bem-vinda, {usuario.nome}</h1>
+                <p className="text-xs md:text-sm text-rose-700">Registre suas horas de serviço</p>
               </div>
             </div>
-          </Card>
-        </div>
-
-        {/* Month Selector */}
-        <Card className="p-3 md:p-4 shadow-md border-pink-200 mt-6">
-          <div className="flex items-center justify-center gap-3">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => handlePreviousMonth(setCurrentMonth, setCurrentYear, currentMonth, currentYear)}
-              className="h-9 w-9 text-rose-700 hover:bg-pink-100"
-            >
-              <ChevronLeft className="w-5 h-5" />
-            </Button>
-            <h2 className="text-lg md:text-xl font-semibold min-w-[180px] md:min-w-[200px] text-center text-rose-900">
-              {monthNames[currentMonth]}/{currentYear}
-            </h2>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => handleNextMonth(setCurrentMonth, setCurrentYear, currentMonth, currentYear)}
-              className="h-9 w-9 text-rose-700 hover:bg-pink-100"
-            >
-              <ChevronRight className="w-5 h-5" />
+            <Button variant="ghost" size="sm" onClick={onLogout} className="text-rose-700 hover:bg-pink-100">
+              <LogOut className="w-4 h-4 mr-2" />
+              Sair
             </Button>
           </div>
-        </Card>
+        </div>
 
-        {/* Action Buttons */}
-        <div className="flex justify-center items-center gap-6 flex-wrap mt-8">
-          <Button
-            onClick={() => setIsDialogOpen(true)}
-            className="gap-2 bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white shadow-lg px-6 h-16 text-base font-semibold"
-          >
-            <Plus className="w-5 h-5" />
-            Adicionar Horas
-          </Button>
+        {/* Conteúdo principal */}
+        <div className="p-4 md:p-6 space-y-6">
+          {/* Stats Cards */}
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+            <Card className="p-4 bg-gradient-to-br from-pink-100 to-rose-100 border-pink-200 relative overflow-hidden shadow-md">
+              <div className="absolute top-2 right-2 opacity-10">
+                <BookOpen className="w-12 h-12 md:w-16 md:h-16 text-rose-500" />
+              </div>
+              <div className="space-y-1 relative z-10">
+                <p className="text-xs text-rose-700 font-medium">Total de Horas</p>
+                <p className="text-2xl md:text-3xl font-bold text-rose-900">
+                  {entries.reduce((sum, entry) => sum + entry.hours, 0).toFixed(2)}h
+                </p>
+              </div>
+            </Card>
+            <Card className="p-4 bg-gradient-to-br from-sky-100 to-blue-100 border-blue-200 relative overflow-hidden shadow-md">
+              <div className="absolute top-2 right-2 opacity-10">
+                <Users className="w-12 h-12 md:w-16 md:h-16 text-blue-500" />
+              </div>
+              <div className="space-y-1 relative z-10">
+                <p className="text-xs text-blue-700 font-medium">Faltam</p>
+                <p className="text-2xl md:text-3xl font-bold text-blue-900">
+                  {Math.max(0, 30 - entries.reduce((sum, entry) => sum + entry.hours, 0)).toFixed(2)}h
+                </p>
+                <p className="text-[10px] text-blue-600">Meta: 30 horas/mês</p>
+              </div>
+            </Card>
+            <Card className="p-4 bg-gradient-to-br from-purple-100 to-pink-100 border-purple-200 relative overflow-hidden shadow-md col-span-2 md:col-span-1">
+              <div className="space-y-1 relative z-10">
+                <p className="text-xs text-purple-700 font-medium">Estudos Bíblicos</p>
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-2xl md:text-3xl font-bold text-purple-900">{bibleStudiesCount}</p>
+                  <div className="flex gap-2">
+                    <Button
+                      size="icon"
+                      variant="outline"
+                      onClick={() => handleDecrementStudies()}
+                      disabled={bibleStudiesCount <= 0}
+                      className="h-8 w-8 rounded-full bg-white hover:bg-purple-50 border-purple-300 text-purple-700 disabled:opacity-40"
+                    >
+                      <Minus className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      size="icon"
+                      variant="outline"
+                      onClick={() => handleIncrementStudies()}
+                      className="h-8 w-8 rounded-full bg-white hover:bg-purple-50 border-purple-300 text-purple-700"
+                    >
+                      <Plus className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </Card>
+          </div>
 
-          <Link
-            href="/cartas"
-            className="inline-flex items-center gap-2 bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white shadow-lg px-6 h-16 text-base font-semibold rounded-md transition-colors"
-          >
-            <Mail className="w-5 h-5" />
-            Exemplos de Cartas
-          </Link>
-
-          <a
-            href="https://jworg.zoom.us/j/84813202624"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 bg-gradient-to-r from-sky-400 to-blue-400 hover:from-sky-500 hover:to-blue-500 text-white font-semibold shadow-lg px-6 h-16 text-base rounded-md transition-colors"
-          >
-            <Video className="w-5 h-5 flex-shrink-0" />
-            <div className="flex flex-col items-start gap-0.5">
-              <span className="leading-tight">Reunião Zoom</span>
-              <span className="text-xs font-bold leading-none opacity-90">Senha: 202020</span>
+          {/* Month Selector */}
+          <Card className="p-3 md:p-4 shadow-md border-pink-200">
+            <div className="flex items-center justify-center gap-3">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => handlePreviousMonth(setCurrentMonth, setCurrentYear, currentMonth, currentYear)}
+                className="h-9 w-9 text-rose-700 hover:bg-pink-100"
+              >
+                <ChevronLeft className="w-5 h-5" />
+              </Button>
+              <h2 className="text-lg md:text-xl font-semibold min-w-[180px] md:min-w-[200px] text-center text-rose-900">
+                {monthNames[currentMonth]}/{currentYear}
+              </h2>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => handleNextMonth(setCurrentMonth, setCurrentYear, currentMonth, currentYear)}
+                className="h-9 w-9 text-rose-700 hover:bg-pink-100"
+              >
+                <ChevronRight className="w-5 h-5" />
+              </Button>
             </div>
-          </a>
+          </Card>
+
+          {/* Action Buttons */}
+          <div className="flex justify-center items-center gap-6 flex-wrap">
+            <Button
+              onClick={() => setIsDialogOpen(true)}
+              className="gap-2 bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white shadow-lg px-6 h-16 text-base font-semibold"
+            >
+              <Plus className="w-5 h-5" />
+              Adicionar Horas
+            </Button>
+
+            <Link
+              href="/cartas"
+              className="inline-flex items-center gap-2 bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white shadow-lg px-6 h-16 text-base font-semibold rounded-md transition-colors"
+            >
+              <Mail className="w-5 h-5" />
+              Exemplos de Cartas
+            </Link>
+
+            <a
+              href="https://jworg.zoom.us/j/84813202624"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 bg-gradient-to-r from-sky-400 to-blue-400 hover:from-sky-500 hover:to-blue-500 text-white font-semibold shadow-lg px-6 h-16 text-base rounded-md transition-colors"
+            >
+              <Video className="w-5 h-5 flex-shrink-0" />
+              <div className="flex flex-col items-start gap-0.5">
+                <span className="leading-tight">Reunião Zoom</span>
+                <span className="text-xs font-bold leading-none opacity-90">Senha: 202020</span>
+              </div>
+            </a>
+          </div>
+
+          {/* Hours Grid */}
+          <div>
+            <HoursGrid entries={entries} onDelete={handleDeleteEntry} onEdit={handleEditEntry} />
+          </div>
         </div>
-
-        {/* Hours Grid */}
-        <div className="mt-8">
-          <HoursGrid entries={entries} onDelete={handleDeleteEntry} onEdit={handleEditEntry} />
-        </div>
-
-        {/* Dialogs */}
-        <AddHoursDialog
-          open={isDialogOpen}
-          onOpenChange={setIsDialogOpen}
-          onAdd={handleAddEntry}
-          onEdit={handleEditEntry}
-          editingEntry={editingEntry}
-          currentMonth={currentMonth}
-          currentYear={currentYear}
-        />
-
-        <BibleStudiesDialog
-          open={isBibleStudiesDialogOpen}
-          onOpenChange={setIsBibleStudiesDialogOpen}
-          currentMonth={currentMonth}
-          currentYear={currentYear}
-          usuarioId={usuario.id}
-        />
       </div>
+
+      {/* Dialogs */}
+      <AddHoursDialog
+        open={isDialogOpen}
+        onOpenChange={setIsDialogOpen}
+        onAdd={handleAddEntry}
+        onEdit={handleEditEntry}
+        editingEntry={editingEntry}
+        currentMonth={currentMonth}
+        currentYear={currentYear}
+      />
+
+      <BibleStudiesDialog
+        open={isBibleStudiesDialogOpen}
+        onOpenChange={setIsBibleStudiesDialogOpen}
+        currentMonth={currentMonth}
+        currentYear={currentYear}
+        usuarioId={usuario.id}
+      />
     </div>
   )
 }
