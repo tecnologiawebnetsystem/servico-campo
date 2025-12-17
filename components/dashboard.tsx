@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import { ChevronLeft, ChevronRight, Plus, LogOut, BookOpen, Users, BookHeart, Video } from "lucide-react"
+import { ChevronLeft, ChevronRight, Plus, LogOut, BookOpen, Users, Video, Minus } from "lucide-react"
 import AddHoursDialog from "@/components/add-hours-dialog"
 import BibleStudiesDialog from "@/components/bible-studies-dialog"
 import HoursGrid from "@/components/hours-grid"
@@ -197,6 +197,52 @@ export default function Dashboard({ onLogout, usuario }: DashboardProps) {
     }
   }
 
+  const handleIncrementStudies = async () => {
+    try {
+      const novoValor = bibleStudiesCount + 1
+      const res = await fetch("/api/estudos", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          usuarioId: usuario.id,
+          mes: currentMonth,
+          ano: currentYear,
+          quantidade: novoValor,
+        }),
+      })
+
+      if (res.ok) {
+        setBibleStudiesCount(novoValor)
+      }
+    } catch (error) {
+      console.error("Erro ao incrementar estudos:", error)
+    }
+  }
+
+  const handleDecrementStudies = async () => {
+    if (bibleStudiesCount <= 0) return
+
+    try {
+      const novoValor = bibleStudiesCount - 1
+      const res = await fetch("/api/estudos", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          usuarioId: usuario.id,
+          mes: currentMonth,
+          ano: currentYear,
+          quantidade: novoValor,
+        }),
+      })
+
+      if (res.ok) {
+        setBibleStudiesCount(novoValor)
+      }
+    } catch (error) {
+      console.error("Erro ao decrementar estudos:", error)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-50 via-blue-50 to-sky-50 pb-6">
       <div className="max-w-4xl mx-auto p-3 md:p-6 space-y-4">
@@ -218,7 +264,7 @@ export default function Dashboard({ onLogout, usuario }: DashboardProps) {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
           <Card className="p-4 bg-gradient-to-br from-pink-100 to-rose-100 border-pink-200 relative overflow-hidden shadow-md">
             <div className="absolute top-2 right-2 opacity-10">
               <BookOpen className="w-12 h-12 md:w-16 md:h-16 text-rose-500" />
@@ -239,18 +285,36 @@ export default function Dashboard({ onLogout, usuario }: DashboardProps) {
             </div>
           </Card>
           <Card className="p-4 bg-gradient-to-br from-purple-100 to-pink-100 border-purple-200 relative overflow-hidden shadow-md col-span-2 md:col-span-1">
-            <div className="absolute top-2 right-2 opacity-10">
-              <BookHeart className="w-12 h-12 md:w-16 md:h-16 text-purple-500" />
-            </div>
             <div className="space-y-1 relative z-10">
               <p className="text-xs text-purple-700 font-medium">Estudos Bíblicos</p>
-              <p className="text-2xl md:text-3xl font-bold text-purple-900">{bibleStudiesCount}</p>
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-2xl md:text-3xl font-bold text-purple-900">{bibleStudiesCount}</p>
+                <div className="flex gap-2">
+                  <Button
+                    size="icon"
+                    variant="outline"
+                    onClick={handleDecrementStudies}
+                    disabled={bibleStudiesCount <= 0}
+                    className="h-8 w-8 rounded-full bg-white hover:bg-purple-50 border-purple-300 text-purple-700 disabled:opacity-40"
+                  >
+                    <Minus className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    size="icon"
+                    variant="outline"
+                    onClick={handleIncrementStudies}
+                    className="h-8 w-8 rounded-full bg-white hover:bg-purple-50 border-purple-300 text-purple-700"
+                  >
+                    <Plus className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
             </div>
           </Card>
         </div>
 
         {/* Month Selector */}
-        <Card className="p-3 md:p-4 shadow-md border-pink-200">
+        <Card className="p-3 md:p-4 shadow-md border-pink-200 mt-6">
           <div className="flex items-center justify-center gap-3">
             <Button
               variant="ghost"
@@ -275,7 +339,7 @@ export default function Dashboard({ onLogout, usuario }: DashboardProps) {
         </Card>
 
         {/* Action Buttons */}
-        <div className="flex justify-center gap-3 flex-wrap">
+        <div className="flex justify-center items-center gap-6 flex-wrap mt-8">
           <Button
             onClick={() => setIsDialogOpen(true)}
             className="gap-2 bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white shadow-lg px-6 h-16 text-base font-semibold"
@@ -283,13 +347,7 @@ export default function Dashboard({ onLogout, usuario }: DashboardProps) {
             <Plus className="w-5 h-5" />
             Adicionar Horas
           </Button>
-          <Button
-            onClick={() => setIsBibleStudiesDialogOpen(true)}
-            className="gap-2 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white shadow-lg px-6 h-16 text-base font-semibold"
-          >
-            <BookHeart className="w-5 h-5" />
-            Estudos Bíblicos
-          </Button>
+
           <a
             href="https://jworg.zoom.us/j/84813202624"
             target="_blank"
@@ -305,7 +363,9 @@ export default function Dashboard({ onLogout, usuario }: DashboardProps) {
         </div>
 
         {/* Hours Grid */}
-        <HoursGrid entries={currentMonthEntries} onDelete={handleDeleteEntry} onEdit={handleOpenEditDialog} />
+        <div className="mt-8">
+          <HoursGrid entries={currentMonthEntries} onDelete={handleDeleteEntry} onEdit={handleOpenEditDialog} />
+        </div>
 
         {/* Dialogs */}
         <AddHoursDialog

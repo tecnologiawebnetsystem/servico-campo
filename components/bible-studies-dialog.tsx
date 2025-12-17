@@ -108,6 +108,21 @@ export default function BibleStudiesDialog({
             </Button>
           </div>
         </div>
+        <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+          <Button
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            className="text-gray-700 border-gray-300 hover:bg-gray-100"
+          >
+            Cancelar
+          </Button>
+          <Button
+            onClick={() => onOpenChange(false)}
+            className="bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white"
+          >
+            Salvar
+          </Button>
+        </div>
       </DialogContent>
     </Dialog>
   )
