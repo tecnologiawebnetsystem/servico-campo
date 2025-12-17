@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import { ChevronLeft, ChevronRight, Plus, LogOut, BookOpen, Users, BookHeart } from "lucide-react"
+import { ChevronLeft, ChevronRight, Plus, LogOut, BookOpen, Users, BookHeart, Video } from "lucide-react"
 import AddHoursDialog from "@/components/add-hours-dialog"
 import BibleStudiesDialog from "@/components/bible-studies-dialog"
 import HoursGrid from "@/components/hours-grid"
@@ -278,18 +278,30 @@ export default function Dashboard({ onLogout, usuario }: DashboardProps) {
         <div className="flex justify-center gap-3 flex-wrap">
           <Button
             onClick={() => setIsDialogOpen(true)}
-            className="gap-2 bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white shadow-md px-6 py-5 text-base"
+            className="gap-2 bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white shadow-lg px-6 h-16 text-base font-semibold"
           >
             <Plus className="w-5 h-5" />
             Adicionar Horas
           </Button>
           <Button
             onClick={() => setIsBibleStudiesDialogOpen(true)}
-            className="gap-2 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white shadow-md px-6 py-5 text-base"
+            className="gap-2 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white shadow-lg px-6 h-16 text-base font-semibold"
           >
             <BookHeart className="w-5 h-5" />
             Estudos Bíblicos
           </Button>
+          <a
+            href="https://jworg.zoom.us/j/84813202624"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 bg-gradient-to-r from-sky-400 to-blue-400 hover:from-sky-500 hover:to-blue-500 text-white font-semibold shadow-lg px-6 h-16 text-base rounded-md transition-colors"
+          >
+            <Video className="w-5 h-5 flex-shrink-0" />
+            <div className="flex flex-col items-start gap-0.5">
+              <span className="leading-tight">Reunião Zoom</span>
+              <span className="text-xs font-bold leading-none opacity-90">Senha: 202020</span>
+            </div>
+          </a>
         </div>
 
         {/* Hours Grid */}
