@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Card } from "@/components/ui/card"
-import { Plus, Mail, Trash2, Eye } from "lucide-react"
+import { Plus, Mail, Trash2, Eye, Search } from "lucide-react"
 import { isOnline, addOfflineAction, saveOfflineData, getOfflineData } from "@/lib/offline-sync"
 import ConfirmDialog from "@/components/confirm-dialog"
 
@@ -32,6 +32,7 @@ export default function CartasDialog({ open, onOpenChange, usuarioId }: CartasDi
   const [loading, setLoading] = useState(false)
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
   const [cartaToDelete, setCartaToDelete] = useState<number | null>(null)
+  const [searchQuery, setSearchQuery] = useState("")
   const online = isOnline()
 
   useEffect(() => {
@@ -144,6 +145,11 @@ export default function CartasDialog({ open, onOpenChange, usuarioId }: CartasDi
     setShowViewer(true)
   }
 
+  const filteredCartas = cartas.filter((carta) => {
+    const query = searchQuery.toLowerCase()
+    return carta.titulo.toLowerCase().includes(query) || carta.texto.toLowerCase().includes(query)
+  })
+
   return (
     <>
       <Dialog open={open && !showViewer} onOpenChange={onOpenChange}>
@@ -165,13 +171,25 @@ export default function CartasDialog({ open, onOpenChange, usuarioId }: CartasDi
                 Nova Carta
               </Button>
 
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <Input
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Pesquisar por título ou conteúdo..."
+                  className="pl-10 border-gray-300"
+                />
+              </div>
+
               {loading ? (
                 <p className="text-center text-gray-500 py-8">Carregando...</p>
-              ) : cartas.length === 0 ? (
-                <p className="text-center text-gray-500 py-8">Nenhuma carta cadastrada ainda</p>
+              ) : filteredCartas.length === 0 ? (
+                <p className="text-center text-gray-500 py-8">
+                  {searchQuery ? "Nenhuma carta encontrada com esse termo" : "Nenhuma carta cadastrada ainda"}
+                </p>
               ) : (
                 <div className="space-y-3">
-                  {cartas.map((carta) => (
+                  {filteredCartas.map((carta) => (
                     <Card
                       key={carta.id}
                       className="p-4 hover:shadow-md transition-shadow cursor-pointer border-gray-200"

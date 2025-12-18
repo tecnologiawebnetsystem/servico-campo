@@ -27,6 +27,7 @@ export default function CartasPage() {
   const [texto, setTexto] = useState("")
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
   const [cartaToDelete, setCartaToDelete] = useState<number | null>(null)
+  const [searchQuery, setSearchQuery] = useState("")
 
   const usuarioId = "1"
 
@@ -128,6 +129,11 @@ export default function CartasPage() {
     return text.substring(0, maxLength) + "..."
   }
 
+  const filteredCartas = cartas.filter((carta) => {
+    const query = searchQuery.toLowerCase()
+    return carta.titulo.toLowerCase().includes(query) || carta.texto.toLowerCase().includes(query)
+  })
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 pb-6">
       <div className="max-w-6xl mx-auto p-3 md:p-6 space-y-6">
@@ -163,6 +169,18 @@ export default function CartasPage() {
           </Button>
         </div>
 
+        {!loading && cartas.length > 0 && (
+          <div className="relative">
+            <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-indigo-400" />
+            <Input
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Pesquisar por título ou conteúdo..."
+              className="pl-11 border-indigo-300 focus:border-indigo-500 bg-white/70 backdrop-blur"
+            />
+          </div>
+        )}
+
         {/* Grid de Cartas */}
         {loading ? (
           <div className="text-center py-12 text-indigo-600">Carregando...</div>
@@ -172,9 +190,15 @@ export default function CartasPage() {
             <p className="text-indigo-600 font-medium mb-2">Nenhuma carta cadastrada</p>
             <p className="text-sm text-indigo-500">Clique em "Nova Carta" para começar</p>
           </Card>
+        ) : filteredCartas.length === 0 ? (
+          <Card className="p-12 text-center border-indigo-200 bg-white/50 backdrop-blur">
+            <Mail className="w-16 h-16 mx-auto text-indigo-300 mb-4" />
+            <p className="text-indigo-600 font-medium mb-2">Nenhuma carta encontrada</p>
+            <p className="text-sm text-indigo-500">Tente pesquisar com outras palavras-chave</p>
+          </Card>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {cartas.map((carta) => (
+            {filteredCartas.map((carta) => (
               <Card
                 key={carta.id}
                 className="p-5 border-indigo-200 bg-white/70 backdrop-blur hover:shadow-lg transition-shadow"
