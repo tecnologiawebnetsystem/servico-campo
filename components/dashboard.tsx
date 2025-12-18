@@ -63,6 +63,8 @@ export default function Dashboard({ onLogout, usuario }: DashboardProps) {
   const [online, setOnline] = useState(true)
   const [syncing, setSyncing] = useState(false)
   const [isAnotacoesDialogOpen, setIsAnotacoesDialogOpen] = useState(false)
+  const [cartasCount, setCartasCount] = useState(0)
+  const [anotacoesCount, setAnotacoesCount] = useState(0)
 
   const monthNames = [
     "Janeiro",
@@ -91,6 +93,8 @@ export default function Dashboard({ onLogout, usuario }: DashboardProps) {
         setSyncing(false)
         fetchHoras()
         fetchEstudos()
+        fetchCartasCount()
+        fetchAnotacoesCount()
       }
     })
 
@@ -115,6 +119,8 @@ export default function Dashboard({ onLogout, usuario }: DashboardProps) {
   useEffect(() => {
     fetchHoras()
     fetchEstudos()
+    fetchCartasCount()
+    fetchAnotacoesCount()
   }, [currentMonth, currentYear])
 
   const fetchHoras = async () => {
@@ -167,6 +173,26 @@ export default function Dashboard({ onLogout, usuario }: DashboardProps) {
       saveOfflineData(`estudos_${usuario.id}_${currentMonth}_${currentYear}`, data.quantidade)
     } catch (error) {
       console.error("Erro ao buscar estudos:", error)
+    }
+  }
+
+  const fetchCartasCount = async () => {
+    try {
+      const res = await fetch(`/api/cartas?usuarioId=${usuario.id}`)
+      const data = await res.json()
+      setCartasCount(Array.isArray(data) ? data.length : 0)
+    } catch (error) {
+      console.error("Erro ao buscar cartas:", error)
+    }
+  }
+
+  const fetchAnotacoesCount = async () => {
+    try {
+      const res = await fetch(`/api/anotacoes?usuarioId=${usuario.id}`)
+      const data = await res.json()
+      setAnotacoesCount(Array.isArray(data) ? data.length : 0)
+    } catch (error) {
+      console.error("Erro ao buscar anotações:", error)
     }
   }
 
@@ -410,6 +436,8 @@ export default function Dashboard({ onLogout, usuario }: DashboardProps) {
               onSyncComplete={() => {
                 fetchHoras()
                 fetchEstudos()
+                fetchCartasCount()
+                fetchAnotacoesCount()
               }}
             />
           </div>
@@ -539,18 +567,24 @@ export default function Dashboard({ onLogout, usuario }: DashboardProps) {
 
             <Link
               href="/cartas"
-              className="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white shadow-lg h-20 text-sm font-semibold rounded-md transition-colors w-full"
+              className="inline-flex flex-col items-center justify-center gap-1 bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white shadow-lg h-20 text-sm font-semibold rounded-md transition-colors w-full"
             >
-              <Mail className="w-4 h-4" />
-              Exemplos de Cartas
+              <div className="flex items-center gap-2">
+                <Mail className="w-4 h-4" />
+                <span>Exemplos de Cartas</span>
+              </div>
+              <span className="text-xs font-normal opacity-90">Total: {cartasCount}</span>
             </Link>
 
             <Button
               onClick={() => setIsAnotacoesDialogOpen(true)}
-              className="gap-2 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white shadow-lg h-20 text-sm font-semibold w-full"
+              className="gap-1 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white shadow-lg h-20 text-sm font-semibold w-full flex flex-col"
             >
-              <Clipboard className="w-4 h-4" />
-              Anotações
+              <div className="flex items-center gap-2">
+                <Clipboard className="w-4 h-4" />
+                <span>Anotações</span>
+              </div>
+              <span className="text-xs font-normal opacity-90">Total: {anotacoesCount}</span>
             </Button>
 
             <a
