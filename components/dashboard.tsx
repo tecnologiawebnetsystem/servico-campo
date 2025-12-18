@@ -32,6 +32,7 @@ import {
   getOfflineData,
 } from "@/lib/offline-sync"
 import OnlineStatus from "@/components/online-status"
+import { decimalToMinutes } from "@/lib/time-utils"
 
 export interface HourEntry {
   id: string
@@ -485,7 +486,14 @@ export default function Dashboard({ onLogout, usuario }: DashboardProps) {
               <div className="space-y-1 relative z-10">
                 <p className="text-xs text-rose-700 font-medium">Total de Horas</p>
                 <p className="text-2xl md:text-3xl font-bold text-rose-900">
-                  {entries.reduce((sum, entry) => sum + entry.hours, 0).toFixed(2)}h
+                  {(() => {
+                    const totalMinutes = entries.reduce((sum, entry) => {
+                      return sum + decimalToMinutes(entry.hours)
+                    }, 0)
+                    const hours = Math.floor(totalMinutes / 60)
+                    const minutes = totalMinutes % 60
+                    return minutes > 0 ? `${hours}h${minutes.toString().padStart(2, "0")}` : `${hours}h`
+                  })()}
                 </p>
               </div>
             </Card>
@@ -496,7 +504,15 @@ export default function Dashboard({ onLogout, usuario }: DashboardProps) {
               <div className="space-y-1 relative z-10">
                 <p className="text-xs text-blue-700 font-medium">Faltam</p>
                 <p className="text-2xl md:text-3xl font-bold text-blue-900">
-                  {Math.max(0, 30 - entries.reduce((sum, entry) => sum + entry.hours, 0)).toFixed(2)}h
+                  {(() => {
+                    const totalMinutes = entries.reduce((sum, entry) => {
+                      return sum + decimalToMinutes(entry.hours)
+                    }, 0)
+                    const remaining = Math.max(0, 30 * 60 - totalMinutes)
+                    const hours = Math.floor(remaining / 60)
+                    const minutes = remaining % 60
+                    return minutes > 0 ? `${hours}h${minutes.toString().padStart(2, "0")}` : `${hours}h`
+                  })()}
                 </p>
                 <p className="text-[10px] text-blue-600">Meta: 30 horas/mês</p>
               </div>
@@ -581,7 +597,7 @@ export default function Dashboard({ onLogout, usuario }: DashboardProps) {
               className="gap-1 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white shadow-lg h-20 text-sm font-semibold w-full flex flex-col"
             >
               <div className="flex items-center gap-2">
-                <Clipboard className="w-4 h-4" />
+                <Clipboard className="w-4 h-4 flex-shrink-0" />
                 <span>Anotações</span>
               </div>
               <span className="text-xs font-normal opacity-90">Total: {anotacoesCount}</span>

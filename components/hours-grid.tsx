@@ -4,6 +4,7 @@ import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Trash2, Pencil } from "lucide-react"
 import type { HourEntry } from "./dashboard"
+import { decimalToMinutes, minutesToHoursString } from "@/lib/time-utils"
 
 interface HoursGridProps {
   entries: HourEntry[]
@@ -37,47 +38,53 @@ export default function HoursGrid({ entries, onDelete, onEdit }: HoursGridProps)
     <div className="space-y-3">
       <h3 className="text-lg font-semibold">Horas Registradas</h3>
       <div className="grid gap-3">
-        {sortedEntries.map((entry) => (
-          <Card key={entry.id} className="p-4">
-            <div className="flex items-center justify-between gap-4">
-              <div className="flex items-center gap-4 flex-1">
-                <div className="text-center min-w-[60px]">
-                  <div className="text-2xl font-bold">{entry.day}</div>
-                  <div className="text-xs text-muted-foreground">Dia</div>
+        {sortedEntries.map((entry) => {
+          const totalMinutes = decimalToMinutes(entry.hours)
+          const hoursStr = minutesToHoursString(totalMinutes)
+          const hours = Math.floor(totalMinutes / 60)
+          const minutes = totalMinutes % 60
+          const displayText = minutes > 0 ? `${hours}h${minutes.toString().padStart(2, "0")}` : `${hours}h`
+
+          return (
+            <Card key={entry.id} className="p-4">
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center gap-4 flex-1">
+                  <div className="text-center min-w-[60px]">
+                    <div className="text-2xl font-bold">{entry.day}</div>
+                    <div className="text-xs text-muted-foreground">Dia</div>
+                  </div>
+                  <div className="h-12 w-px bg-border" />
+                  <div className="flex-1 space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${typeColors[entry.type]}`}>
+                        {entry.type}
+                      </span>
+                    </div>
+                    <div className="text-sm text-muted-foreground">{displayText}</div>
+                  </div>
                 </div>
-                <div className="h-12 w-px bg-border" />
-                <div className="flex-1 space-y-1">
-                  <div className="flex items-center gap-2">
-                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${typeColors[entry.type]}`}>
-                      {entry.type}
-                    </span>
-                  </div>
-                  <div className="text-sm text-muted-foreground">
-                    {entry.hours} {entry.hours === 1 ? "hora" : "horas"}
-                  </div>
+                <div className="flex gap-2">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => onEdit(entry)}
+                    className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                  >
+                    <Pencil className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => onDelete(entry.id)}
+                    className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
                 </div>
               </div>
-              <div className="flex gap-2">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => onEdit(entry)}
-                  className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                >
-                  <Pencil className="w-4 h-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => onDelete(entry.id)}
-                  className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </Button>
-              </div>
-            </div>
-          </Card>
-        ))}
+            </Card>
+          )
+        })}
       </div>
     </div>
   )
