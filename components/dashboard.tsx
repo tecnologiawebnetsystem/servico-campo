@@ -3,7 +3,19 @@
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import { BookOpen, ChevronLeft, ChevronRight, Clock, Target, Users, Plus, Mail, StickyNote, Video } from "lucide-react"
+import {
+  BookOpen,
+  ChevronLeft,
+  ChevronRight,
+  Clock,
+  Target,
+  Users,
+  Plus,
+  Mail,
+  StickyNote,
+  Video,
+  LogOut,
+} from "lucide-react"
 import AddHoursDialog from "@/components/add-hours-dialog"
 import CartasDialog from "@/components/cartas-dialog"
 import AnotacoesDialog from "@/components/anotacoes-dialog"
@@ -197,26 +209,23 @@ export default function Dashboard({ onLogout, usuario }: DashboardProps) {
   }
 
   useEffect(() => {
-    // Calcula o total de horas em decimal
-    const totalMinutes = entries.reduce((sum, entry) => {
-      return sum + decimalToMinutes(entry.hours)
-    }, 0)
-    const totalHoursDecimal = totalMinutes / 60
-    const remaining = 30 - totalHoursDecimal
+    setShowLoveMessage(true)
+  }, [])
 
-    // Se faltar menos de 10 horas, mostra o modal (apenas uma vez por sessão)
-    if (remaining > 0 && remaining < 10 && !sessionStorage.getItem("motivationShown")) {
-      setHoursRemaining(remaining)
-      setShowMotivation(true)
-      sessionStorage.setItem("motivationShown", "true")
-    }
+  useEffect(() => {
+    if (!showLoveMessage) {
+      const totalMinutes = entries.reduce((sum, entry) => {
+        return sum + decimalToMinutes(entry.hours)
+      }, 0)
+      const remaining = 1800 - totalMinutes // 30 horas = 1800 minutos
+      const remainingHours = remaining / 60
 
-    // Automatically show love message on login
-    if (!sessionStorage.getItem("loveMessageShown")) {
-      setShowLoveMessage(true)
-      sessionStorage.setItem("loveMessageShown", "true")
+      if (remainingHours > 0 && remainingHours < 10) {
+        setHoursRemaining(remainingHours)
+        setShowMotivation(true)
+      }
     }
-  }, [entries])
+  }, [entries, showLoveMessage])
 
   const handlePreviousMonth = () => {
     const newDate = new Date(currentDate)
@@ -510,7 +519,8 @@ export default function Dashboard({ onLogout, usuario }: DashboardProps) {
               </div>
             </div>
             <Button variant="ghost" size="sm" onClick={onLogout} className="text-rose-700 hover:bg-pink-100">
-              {/* Logout button */}
+              <LogOut className="mr-2 h-4 w-4" />
+              Sair
             </Button>
           </div>
         </div>
