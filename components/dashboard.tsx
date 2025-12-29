@@ -77,6 +77,7 @@ export default function Dashboard({ onLogout, usuario }: DashboardProps) {
   const [syncing, setSyncing] = useState(false)
   const [bibleStudiesCount, setBibleStudiesCount] = useState(0)
   const [showLoveMessage, setShowLoveMessage] = useState(false)
+  const [totalHours, setTotalHours] = useState(0)
 
   const monthNames = [
     "Janeiro",
@@ -209,23 +210,31 @@ export default function Dashboard({ onLogout, usuario }: DashboardProps) {
   }
 
   useEffect(() => {
+    // Sempre mostrar a mensagem de amor ao fazer login
     setShowLoveMessage(true)
-  }, [])
+
+    // Se estiver perto de completar 30 horas, mostrar mensagem motivacional também
+    if (totalHours >= 20 && totalHours < 30) {
+      // Pequeno delay para a mensagem de amor aparecer primeiro
+      setTimeout(() => {
+        setShowMotivation(true)
+      }, 1000)
+    }
+  }, []) // Executa apenas ao montar o componente (cada login)
 
   useEffect(() => {
-    if (!showLoveMessage) {
-      const totalMinutes = entries.reduce((sum, entry) => {
-        return sum + decimalToMinutes(entry.hours)
-      }, 0)
-      const remaining = 1800 - totalMinutes // 30 horas = 1800 minutos
-      const remainingHours = remaining / 60
+    const totalMinutes = entries.reduce((sum, entry) => {
+      return sum + decimalToMinutes(entry.hours)
+    }, 0)
+    const totalHours = totalMinutes / 60
+    setTotalHours(totalHours)
+    const remaining = 1800 - totalMinutes // 30 horas = 1800 minutos
+    const remainingHours = remaining / 60
 
-      if (remainingHours > 0 && remainingHours < 10) {
-        setHoursRemaining(remainingHours)
-        setShowMotivation(true)
-      }
+    if (remainingHours > 0 && remainingHours < 10) {
+      setHoursRemaining(remainingHours)
     }
-  }, [entries, showLoveMessage])
+  }, [entries])
 
   const handlePreviousMonth = () => {
     const newDate = new Date(currentDate)
