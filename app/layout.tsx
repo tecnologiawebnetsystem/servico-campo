@@ -45,6 +45,23 @@ export default function RootLayout({
       <head>
         <link rel="icon" href="/icon-192.jpg" type="image/jpeg" />
         <link rel="apple-touch-icon" href="/apple-icon.png" />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              if ('serviceWorker' in navigator) {
+                window.addEventListener('load', () => {
+                  navigator.serviceWorker.register('/sw.js')
+                    .then((registration) => {
+                      console.log('SW registrado:', registration.scope);
+                    })
+                    .catch((error) => {
+                      console.log('Falha ao registrar SW:', error);
+                    });
+                });
+              }
+            `,
+          }}
+        />
       </head>
       <body className={`font-sans antialiased`}>
         {children}

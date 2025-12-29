@@ -3,25 +3,14 @@
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import {
-  ChevronLeft,
-  ChevronRight,
-  Plus,
-  LogOut,
-  BookOpen,
-  Users,
-  Video,
-  Minus,
-  WifiOff,
-  Wifi,
-  Mail,
-  Clipboard,
-} from "lucide-react"
+import { BookOpen, ChevronLeft, ChevronRight, Clock, Target, Users, Plus, Mail, StickyNote, Video } from "lucide-react"
 import AddHoursDialog from "@/components/add-hours-dialog"
-import BibleStudiesDialog from "@/components/bible-studies-dialog"
-import HoursGrid from "@/components/hours-grid"
-import Link from "next/link"
+import CartasDialog from "@/components/cartas-dialog"
 import AnotacoesDialog from "@/components/anotacoes-dialog"
+import { MotivationModal } from "@/components/motivation-modal"
+import LoveMessageModal from "@/components/love-message-modal"
+import HoursGrid from "@/components/hours-grid"
+import { decimalToMinutes, minutesToHoursString } from "@/lib/time-utils"
 import {
   isOnline,
   addOfflineAction,
@@ -32,7 +21,6 @@ import {
   getOfflineData,
 } from "@/lib/offline-sync"
 import OnlineStatus from "@/components/online-status"
-import { decimalToMinutes } from "@/lib/time-utils"
 
 export interface HourEntry {
   id: string
@@ -40,6 +28,16 @@ export interface HourEntry {
   hours: number
   type: "Pregação" | "Cartas" | "Ligação" | "Estudo" | "TPE"
   date: string
+}
+
+interface Carta {
+  id: number
+  content: string
+}
+
+interface Anotacao {
+  id: number
+  note: string
 }
 
 interface Usuario {
@@ -53,19 +51,20 @@ interface DashboardProps {
 }
 
 export default function Dashboard({ onLogout, usuario }: DashboardProps) {
-  const [currentMonth, setCurrentMonth] = useState(new Date().getMonth())
-  const [currentYear, setCurrentYear] = useState(new Date().getFullYear())
+  const [currentDate, setCurrentDate] = useState(new Date())
   const [entries, setEntries] = useState<HourEntry[]>([])
-  const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [isBibleStudiesDialogOpen, setIsBibleStudiesDialogOpen] = useState(false)
-  const [bibleStudiesCount, setBibleStudiesCount] = useState(0)
-  const [loading, setLoading] = useState(true)
-  const [editingEntry, setEditingEntry] = useState<HourEntry | null>(null)
+  const [cartas, setCartas] = useState<Carta[]>([])
+  const [anotacoes, setAnotacoes] = useState<Anotacao[]>([])
+  const [showAddHours, setShowAddHours] = useState(false)
+  const [showCartas, setShowCartas] = useState(false)
+  const [showAnotacoes, setShowAnotacoes] = useState(false)
+  const [editingEntry, setEditingEntry] = useState<HourEntry | undefined>()
+  const [showMotivation, setShowMotivation] = useState(false)
+  const [hoursRemaining, setHoursRemaining] = useState(0)
   const [online, setOnline] = useState(true)
   const [syncing, setSyncing] = useState(false)
-  const [isAnotacoesDialogOpen, setIsAnotacoesDialogOpen] = useState(false)
-  const [cartasCount, setCartasCount] = useState(0)
-  const [anotacoesCount, setAnotacoesCount] = useState(0)
+  const [bibleStudiesCount, setBibleStudiesCount] = useState(0)
+  const [showLoveMessage, setShowLoveMessage] = useState(false)
 
   const monthNames = [
     "Janeiro",
@@ -92,10 +91,10 @@ export default function Dashboard({ onLogout, usuario }: DashboardProps) {
         setSyncing(true)
         await syncOfflineData(usuario.id)
         setSyncing(false)
-        fetchHoras()
+        fetchEntries()
+        fetchCartas()
+        fetchAnotacoes()
         fetchEstudos()
-        fetchCartasCount()
-        fetchAnotacoesCount()
       }
     })
 
@@ -105,39 +104,39 @@ export default function Dashboard({ onLogout, usuario }: DashboardProps) {
   useEffect(() => {
     if (!online) {
       const offlineData = getOfflineData()
-      const key = `horas_${usuario.id}_${currentMonth}_${currentYear}`
+      const key = `horas_${usuario.id}_${currentDate.getMonth()}_${currentDate.getFullYear()}`
       if (offlineData[key]) {
         setEntries(offlineData[key])
       }
 
-      const estudosKey = `estudos_${usuario.id}_${currentMonth}_${currentYear}`
+      const estudosKey = `estudos_${usuario.id}_${currentDate.getMonth()}_${currentDate.getFullYear()}`
       if (offlineData[estudosKey] !== undefined) {
         setBibleStudiesCount(offlineData[estudosKey])
       }
     }
-  }, [online, currentMonth, currentYear])
+  }, [online, currentDate])
 
   useEffect(() => {
-    fetchHoras()
+    fetchEntries()
+    fetchCartas()
+    fetchAnotacoes()
     fetchEstudos()
-    fetchCartasCount()
-    fetchAnotacoesCount()
-  }, [currentMonth, currentYear])
+  }, [currentDate])
 
-  const fetchHoras = async () => {
+  const fetchEntries = async () => {
     if (!online) {
       const offlineData = getOfflineData()
-      const key = `horas_${usuario.id}_${currentMonth}_${currentYear}`
+      const key = `horas_${usuario.id}_${currentDate.getMonth()}_${currentDate.getFullYear()}`
       if (offlineData[key]) {
         setEntries(offlineData[key])
       }
-      setLoading(false)
       return
     }
 
     try {
-      setLoading(true)
-      const res = await fetch(`/api/horas?usuarioId=${usuario.id}&mes=${currentMonth}&ano=${currentYear}`)
+      const res = await fetch(
+        `/api/horas?usuarioId=${usuario.id}&mes=${currentDate.getMonth()}&ano=${currentDate.getFullYear()}`,
+      )
       const data = await res.json()
 
       const horasFormatadas: HourEntry[] = data.map((item: any) => ({
@@ -149,18 +148,36 @@ export default function Dashboard({ onLogout, usuario }: DashboardProps) {
       }))
 
       setEntries(horasFormatadas)
-      saveOfflineData(`horas_${usuario.id}_${currentMonth}_${currentYear}`, horasFormatadas)
+      saveOfflineData(`horas_${usuario.id}_${currentDate.getMonth()}_${currentDate.getFullYear()}`, horasFormatadas)
     } catch (error) {
       console.error("Erro ao buscar horas:", error)
-    } finally {
-      setLoading(false)
+    }
+  }
+
+  const fetchCartas = async () => {
+    try {
+      const res = await fetch(`/api/cartas?usuarioId=${usuario.id}`)
+      const data = await res.json()
+      setCartas(Array.isArray(data) ? data : [])
+    } catch (error) {
+      console.error("Erro ao buscar cartas:", error)
+    }
+  }
+
+  const fetchAnotacoes = async () => {
+    try {
+      const res = await fetch(`/api/anotacoes?usuarioId=${usuario.id}`)
+      const data = await res.json()
+      setAnotacoes(Array.isArray(data) ? data : [])
+    } catch (error) {
+      console.error("Erro ao buscar anotações:", error)
     }
   }
 
   const fetchEstudos = async () => {
     if (!online) {
       const offlineData = getOfflineData()
-      const key = `estudos_${usuario.id}_${currentMonth}_${currentYear}`
+      const key = `estudos_${usuario.id}_${currentDate.getMonth()}_${currentDate.getFullYear()}`
       if (offlineData[key] !== undefined) {
         setBibleStudiesCount(offlineData[key])
       }
@@ -168,33 +185,49 @@ export default function Dashboard({ onLogout, usuario }: DashboardProps) {
     }
 
     try {
-      const res = await fetch(`/api/estudos?usuarioId=${usuario.id}&mes=${currentMonth}&ano=${currentYear}`)
+      const res = await fetch(
+        `/api/estudos?usuarioId=${usuario.id}&mes=${currentDate.getMonth()}&ano=${currentDate.getFullYear()}`,
+      )
       const data = await res.json()
       setBibleStudiesCount(data.quantidade)
-      saveOfflineData(`estudos_${usuario.id}_${currentMonth}_${currentYear}`, data.quantidade)
+      saveOfflineData(`estudos_${usuario.id}_${currentDate.getMonth()}_${currentDate.getFullYear()}`, data.quantidade)
     } catch (error) {
       console.error("Erro ao buscar estudos:", error)
     }
   }
 
-  const fetchCartasCount = async () => {
-    try {
-      const res = await fetch(`/api/cartas?usuarioId=${usuario.id}`)
-      const data = await res.json()
-      setCartasCount(Array.isArray(data) ? data.length : 0)
-    } catch (error) {
-      console.error("Erro ao buscar cartas:", error)
+  useEffect(() => {
+    // Calcula o total de horas em decimal
+    const totalMinutes = entries.reduce((sum, entry) => {
+      return sum + decimalToMinutes(entry.hours)
+    }, 0)
+    const totalHoursDecimal = totalMinutes / 60
+    const remaining = 30 - totalHoursDecimal
+
+    // Se faltar menos de 10 horas, mostra o modal (apenas uma vez por sessão)
+    if (remaining > 0 && remaining < 10 && !sessionStorage.getItem("motivationShown")) {
+      setHoursRemaining(remaining)
+      setShowMotivation(true)
+      sessionStorage.setItem("motivationShown", "true")
     }
+
+    // Automatically show love message on login
+    if (!sessionStorage.getItem("loveMessageShown")) {
+      setShowLoveMessage(true)
+      sessionStorage.setItem("loveMessageShown", "true")
+    }
+  }, [entries])
+
+  const handlePreviousMonth = () => {
+    const newDate = new Date(currentDate)
+    newDate.setMonth(currentDate.getMonth() - 1)
+    setCurrentDate(newDate)
   }
 
-  const fetchAnotacoesCount = async () => {
-    try {
-      const res = await fetch(`/api/anotacoes?usuarioId=${usuario.id}`)
-      const data = await res.json()
-      setAnotacoesCount(Array.isArray(data) ? data.length : 0)
-    } catch (error) {
-      console.error("Erro ao buscar anotações:", error)
-    }
+  const handleNextMonth = () => {
+    const newDate = new Date(currentDate)
+    newDate.setMonth(currentDate.getMonth() + 1)
+    setCurrentDate(newDate)
   }
 
   const handleAddEntry = async (entry: Omit<HourEntry, "id">) => {
@@ -205,7 +238,10 @@ export default function Dashboard({ onLogout, usuario }: DashboardProps) {
     }
 
     setEntries([...entries, newEntry])
-    saveOfflineData(`horas_${usuario.id}_${currentMonth}_${currentYear}`, [...entries, newEntry])
+    saveOfflineData(`horas_${usuario.id}_${currentDate.getMonth()}_${currentDate.getFullYear()}`, [
+      ...entries,
+      newEntry,
+    ])
 
     if (!online) {
       addOfflineAction("ADD_HORA", {
@@ -213,8 +249,8 @@ export default function Dashboard({ onLogout, usuario }: DashboardProps) {
         horas: entry.hours,
         modalidade: entry.type,
         dataRegistro,
-        mes: currentMonth,
-        ano: currentYear,
+        mes: currentDate.getMonth(),
+        ano: currentDate.getFullYear(),
       })
       return
     }
@@ -229,13 +265,13 @@ export default function Dashboard({ onLogout, usuario }: DashboardProps) {
           horas: entry.hours,
           modalidade: entry.type,
           dataRegistro,
-          mes: currentMonth,
-          ano: currentYear,
+          mes: currentDate.getMonth(),
+          ano: currentDate.getFullYear(),
         }),
       })
 
       if (res.ok) {
-        fetchHoras()
+        fetchEntries()
       }
     } catch (error) {
       console.error("Erro ao adicionar horas:", error)
@@ -244,8 +280,8 @@ export default function Dashboard({ onLogout, usuario }: DashboardProps) {
         horas: entry.hours,
         modalidade: entry.type,
         dataRegistro,
-        mes: currentMonth,
-        ano: currentYear,
+        mes: currentDate.getMonth(),
+        ano: currentDate.getFullYear(),
       })
     }
   }
@@ -255,7 +291,7 @@ export default function Dashboard({ onLogout, usuario }: DashboardProps) {
 
     const updatedEntries = entries.map((e) => (e.id === id ? { ...entry, id } : e))
     setEntries(updatedEntries)
-    saveOfflineData(`horas_${usuario.id}_${currentMonth}_${currentYear}`, updatedEntries)
+    saveOfflineData(`horas_${usuario.id}_${currentDate.getMonth()}_${currentDate.getFullYear()}`, updatedEntries)
 
     if (!online) {
       addOfflineAction("UPDATE_HORA", {
@@ -264,10 +300,9 @@ export default function Dashboard({ onLogout, usuario }: DashboardProps) {
         horas: entry.hours,
         modalidade: entry.type,
         dataRegistro,
-        mes: currentMonth,
-        ano: currentYear,
+        mes: currentDate.getMonth(),
+        ano: currentDate.getFullYear(),
       })
-      setEditingEntry(null)
       return
     }
 
@@ -282,14 +317,13 @@ export default function Dashboard({ onLogout, usuario }: DashboardProps) {
           horas: entry.hours,
           modalidade: entry.type,
           dataRegistro,
-          mes: currentMonth,
-          ano: currentYear,
+          mes: currentDate.getMonth(),
+          ano: currentDate.getFullYear(),
         }),
       })
 
       if (res.ok) {
-        fetchHoras()
-        setEditingEntry(null)
+        fetchEntries()
       }
     } catch (error) {
       console.error("Erro ao editar horas:", error)
@@ -299,8 +333,8 @@ export default function Dashboard({ onLogout, usuario }: DashboardProps) {
         horas: entry.hours,
         modalidade: entry.type,
         dataRegistro,
-        mes: currentMonth,
-        ano: currentYear,
+        mes: currentDate.getMonth(),
+        ano: currentDate.getFullYear(),
       })
     }
   }
@@ -308,7 +342,7 @@ export default function Dashboard({ onLogout, usuario }: DashboardProps) {
   const handleDeleteEntry = async (id: string) => {
     const updatedEntries = entries.filter((entry) => entry.id !== id)
     setEntries(updatedEntries)
-    saveOfflineData(`horas_${usuario.id}_${currentMonth}_${currentYear}`, updatedEntries)
+    saveOfflineData(`horas_${usuario.id}_${currentDate.getMonth()}_${currentDate.getFullYear()}`, updatedEntries)
 
     if (!online) {
       addOfflineAction("DELETE_HORA", { id })
@@ -333,12 +367,12 @@ export default function Dashboard({ onLogout, usuario }: DashboardProps) {
     const novoValor = bibleStudiesCount + 1
 
     setBibleStudiesCount(novoValor)
-    saveOfflineData(`estudos_${usuario.id}_${currentMonth}_${currentYear}`, novoValor)
+    saveOfflineData(`estudos_${usuario.id}_${currentDate.getMonth()}_${currentDate.getFullYear()}`, novoValor)
 
     if (!online) {
       addOfflineAction("UPDATE_ESTUDOS", {
-        mes: currentMonth,
-        ano: currentYear,
+        mes: currentDate.getMonth(),
+        ano: currentDate.getFullYear(),
         quantidade: novoValor,
       })
       return
@@ -350,24 +384,24 @@ export default function Dashboard({ onLogout, usuario }: DashboardProps) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           usuarioId: usuario.id,
-          mes: currentMonth,
-          ano: currentYear,
+          mes: currentDate.getMonth(),
+          ano: currentDate.getFullYear(),
           quantidade: novoValor,
         }),
       })
 
       if (!res.ok) {
         addOfflineAction("UPDATE_ESTUDOS", {
-          mes: currentMonth,
-          ano: currentYear,
+          mes: currentDate.getMonth(),
+          ano: currentDate.getFullYear(),
           quantidade: novoValor,
         })
       }
     } catch (error) {
       console.error("Erro ao incrementar estudos:", error)
       addOfflineAction("UPDATE_ESTUDOS", {
-        mes: currentMonth,
-        ano: currentYear,
+        mes: currentDate.getMonth(),
+        ano: currentDate.getFullYear(),
         quantidade: novoValor,
       })
     }
@@ -379,12 +413,12 @@ export default function Dashboard({ onLogout, usuario }: DashboardProps) {
     const novoValor = bibleStudiesCount - 1
 
     setBibleStudiesCount(novoValor)
-    saveOfflineData(`estudos_${usuario.id}_${currentMonth}_${currentYear}`, novoValor)
+    saveOfflineData(`estudos_${usuario.id}_${currentDate.getMonth()}_${currentDate.getFullYear()}`, novoValor)
 
     if (!online) {
       addOfflineAction("UPDATE_ESTUDOS", {
-        mes: currentMonth,
-        ano: currentYear,
+        mes: currentDate.getMonth(),
+        ano: currentDate.getFullYear(),
         quantidade: novoValor,
       })
       return
@@ -396,24 +430,24 @@ export default function Dashboard({ onLogout, usuario }: DashboardProps) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           usuarioId: usuario.id,
-          mes: currentMonth,
-          ano: currentYear,
+          mes: currentDate.getMonth(),
+          ano: currentDate.getFullYear(),
           quantidade: novoValor,
         }),
       })
 
       if (!res.ok) {
         addOfflineAction("UPDATE_ESTUDOS", {
-          mes: currentMonth,
-          ano: currentYear,
+          mes: currentDate.getMonth(),
+          ano: currentDate.getFullYear(),
           quantidade: novoValor,
         })
       }
     } catch (error) {
       console.error("Erro ao decrementar estudos:", error)
       addOfflineAction("UPDATE_ESTUDOS", {
-        mes: currentMonth,
-        ano: currentYear,
+        mes: currentDate.getMonth(),
+        ano: currentDate.getFullYear(),
         quantidade: novoValor,
       })
     }
@@ -422,38 +456,45 @@ export default function Dashboard({ onLogout, usuario }: DashboardProps) {
   const pendingActions = getOfflineQueue().length
 
   const handleEdit = (entry: HourEntry) => {
-    console.log("[v0] Abrindo edição para:", entry)
     setEditingEntry(entry)
-    setIsDialogOpen(true)
+    setShowAddHours(true)
   }
 
+  const totalMinutes = entries.reduce((sum, entry) => {
+    return sum + decimalToMinutes(entry.hours)
+  }, 0)
+
+  const totalHoursFormatted = minutesToHoursString(totalMinutes)
+
+  // Calcular horas restantes para atingir 30
+  const remainingMinutes = 30 * 60 - totalMinutes
+  const remainingFormatted = remainingMinutes > 0 ? minutesToHoursString(remainingMinutes) : "0,00"
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-gray-50 to-slate-100 py-4 md:py-8">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 py-4 md:py-8">
       <div className="max-w-5xl mx-auto bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden">
         <div className="bg-gradient-to-br from-pink-50 via-blue-50 to-sky-50 px-4 md:px-6 py-4 border-b border-gray-200">
           <div className="flex justify-end mb-3">
             <OnlineStatus
               usuarioId={usuario.id}
               onSyncComplete={() => {
-                fetchHoras()
+                fetchEntries()
+                fetchCartas()
+                fetchAnotacoes()
                 fetchEstudos()
-                fetchCartasCount()
-                fetchAnotacoesCount()
               }}
             />
           </div>
 
           {!online && (
             <div className="bg-amber-100 border border-amber-300 text-amber-800 px-4 py-2 rounded-lg flex items-center gap-2 text-sm mb-3">
-              <WifiOff className="w-4 h-4" />
-              <span>Modo Offline - {pendingActions} ação(ões) pendente(s) de sincronização</span>
+              {/* Offline status indicator */}
             </div>
           )}
 
           {syncing && (
             <div className="bg-blue-100 border border-blue-300 text-blue-800 px-4 py-2 rounded-lg flex items-center gap-2 text-sm mb-3">
-              <Wifi className="w-4 h-4 animate-pulse" />
-              <span>Sincronizando dados...</span>
+              {/* Syncing status indicator */}
             </div>
           )}
 
@@ -469,8 +510,7 @@ export default function Dashboard({ onLogout, usuario }: DashboardProps) {
               </div>
             </div>
             <Button variant="ghost" size="sm" onClick={onLogout} className="text-rose-700 hover:bg-pink-100">
-              <LogOut className="w-4 h-4 mr-2" />
-              Sair
+              {/* Logout button */}
             </Button>
           </div>
         </div>
@@ -480,68 +520,54 @@ export default function Dashboard({ onLogout, usuario }: DashboardProps) {
           {/* Stats Cards */}
           <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
             <Card className="p-4 bg-gradient-to-br from-pink-100 to-rose-100 border-pink-200 relative overflow-hidden shadow-md">
-              <div className="absolute top-2 right-2 opacity-10">
-                <BookOpen className="w-12 h-12 md:w-16 md:h-16 text-rose-500" />
+              <div className="absolute -right-4 -top-4 opacity-10">
+                <Clock className="w-24 h-24" />
               </div>
-              <div className="space-y-1 relative z-10">
-                <p className="text-xs text-rose-700 font-medium">Total de Horas</p>
-                <p className="text-2xl md:text-3xl font-bold text-rose-900">
-                  {(() => {
-                    const totalMinutes = entries.reduce((sum, entry) => {
-                      return sum + decimalToMinutes(entry.hours)
-                    }, 0)
-                    const hours = Math.floor(totalMinutes / 60)
-                    const minutes = totalMinutes % 60
-                    return minutes > 0 ? `${hours}h${minutes.toString().padStart(2, "0")}` : `${hours}h`
-                  })()}
-                </p>
+              <div className="relative">
+                <p className="text-xs text-rose-700 font-medium mb-1">Total de Horas</p>
+                <p className="text-3xl font-bold text-rose-900">{totalHoursFormatted}</p>
+                <p className="text-xs text-rose-600 mt-1">este mês</p>
               </div>
             </Card>
+
             <Card className="p-4 bg-gradient-to-br from-sky-100 to-blue-100 border-blue-200 relative overflow-hidden shadow-md">
-              <div className="absolute top-2 right-2 opacity-10">
-                <Users className="w-12 h-12 md:w-16 md:h-16 text-blue-500" />
+              <div className="absolute -right-4 -top-4 opacity-10">
+                <Target className="w-24 h-24" />
               </div>
-              <div className="space-y-1 relative z-10">
-                <p className="text-xs text-blue-700 font-medium">Faltam</p>
-                <p className="text-2xl md:text-3xl font-bold text-blue-900">
-                  {(() => {
-                    const totalMinutes = entries.reduce((sum, entry) => {
-                      return sum + decimalToMinutes(entry.hours)
-                    }, 0)
-                    const remaining = Math.max(0, 30 * 60 - totalMinutes)
-                    const hours = Math.floor(remaining / 60)
-                    const minutes = remaining % 60
-                    return minutes > 0 ? `${hours}h${minutes.toString().padStart(2, "0")}` : `${hours}h`
-                  })()}
-                </p>
-                <p className="text-[10px] text-blue-600">Meta: 30 horas/mês</p>
+              <div className="relative">
+                <p className="text-xs text-sky-700 font-medium mb-1">Faltam</p>
+                <p className="text-3xl font-bold text-sky-900">{remainingFormatted}</p>
+                <p className="text-xs text-sky-600 mt-1">para 30 horas</p>
               </div>
             </Card>
+
             <Card className="p-4 bg-gradient-to-br from-purple-100 to-pink-100 border-purple-200 relative overflow-hidden shadow-md col-span-2 md:col-span-1">
-              <div className="space-y-1 relative z-10">
-                <p className="text-xs text-purple-700 font-medium">Estudos Bíblicos</p>
-                <div className="flex items-center justify-between gap-3">
-                  <p className="text-2xl md:text-3xl font-bold text-purple-900">{bibleStudiesCount}</p>
-                  <div className="flex gap-2">
-                    <Button
-                      size="icon"
-                      variant="outline"
-                      onClick={() => handleDecrementStudies()}
-                      disabled={bibleStudiesCount <= 0}
-                      className="h-8 w-8 rounded-full bg-white hover:bg-purple-50 border-purple-300 text-purple-700 disabled:opacity-40"
-                    >
-                      <Minus className="w-4 h-4" />
-                    </Button>
-                    <Button
-                      size="icon"
-                      variant="outline"
-                      onClick={() => handleIncrementStudies()}
-                      className="h-8 w-8 rounded-full bg-white hover:bg-purple-50 border-purple-300 text-purple-700"
-                    >
-                      <Plus className="w-4 h-4" />
-                    </Button>
-                  </div>
+              <div className="absolute -right-4 -top-4 opacity-10">
+                <Users className="w-24 h-24" />
+              </div>
+              <div className="relative">
+                <p className="text-xs text-purple-700 font-medium mb-1">Estudos Bíblicos</p>
+                <div className="flex items-center gap-3">
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={handleDecrementStudies}
+                    disabled={bibleStudiesCount <= 0}
+                    className="h-8 w-8 p-0 hover:bg-purple-200"
+                  >
+                    -
+                  </Button>
+                  <p className="text-3xl font-bold text-purple-900">{bibleStudiesCount}</p>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={handleIncrementStudies}
+                    className="h-8 w-8 p-0 hover:bg-purple-200"
+                  >
+                    +
+                  </Button>
                 </div>
+                <p className="text-xs text-purple-600 mt-1">este mês</p>
               </div>
             </Card>
           </div>
@@ -552,18 +578,18 @@ export default function Dashboard({ onLogout, usuario }: DashboardProps) {
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => handlePreviousMonth(setCurrentMonth, setCurrentYear, currentMonth, currentYear)}
+                onClick={handlePreviousMonth}
                 className="h-9 w-9 text-rose-700 hover:bg-pink-100"
               >
                 <ChevronLeft className="w-5 h-5" />
               </Button>
               <h2 className="text-lg md:text-xl font-semibold min-w-[180px] md:min-w-[200px] text-center text-rose-900">
-                {monthNames[currentMonth]}/{currentYear}
+                {monthNames[currentDate.getMonth()]}/{currentDate.getFullYear()}
               </h2>
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => handleNextMonth(setCurrentMonth, setCurrentYear, currentMonth, currentYear)}
+                onClick={handleNextMonth}
                 className="h-9 w-9 text-rose-700 hover:bg-pink-100"
               >
                 <ChevronRight className="w-5 h-5" />
@@ -574,99 +600,80 @@ export default function Dashboard({ onLogout, usuario }: DashboardProps) {
           {/* Action Buttons */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
             <Button
-              onClick={() => setIsDialogOpen(true)}
+              onClick={() => {
+                setEditingEntry(undefined)
+                setShowAddHours(true)
+              }}
               className="gap-2 bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white shadow-lg h-20 text-sm font-semibold w-full"
             >
-              <Plus className="w-4 h-4" />
+              <Plus className="w-5 h-5" />
               Adicionar Horas
             </Button>
 
-            <Link
-              href="/cartas"
-              className="inline-flex flex-col items-center justify-center gap-1 bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white shadow-lg h-20 text-sm font-semibold rounded-md transition-colors w-full"
+            <Button
+              onClick={() => setShowCartas(true)}
+              className="gap-1 bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white shadow-lg h-20 text-sm font-semibold w-full flex flex-col"
             >
               <div className="flex items-center gap-2">
-                <Mail className="w-4 h-4" />
+                <Mail className="w-5 h-5" />
                 <span>Exemplos de Cartas</span>
               </div>
-              <span className="text-xs font-normal opacity-90">Total: {cartasCount}</span>
-            </Link>
+              <span className="text-xs opacity-90">({cartas.length} cartas)</span>
+            </Button>
 
             <Button
-              onClick={() => setIsAnotacoesDialogOpen(true)}
+              onClick={() => setShowAnotacoes(true)}
               className="gap-1 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white shadow-lg h-20 text-sm font-semibold w-full flex flex-col"
             >
               <div className="flex items-center gap-2">
-                <Clipboard className="w-4 h-4 flex-shrink-0" />
+                <StickyNote className="w-5 h-5" />
                 <span>Anotações</span>
               </div>
-              <span className="text-xs font-normal opacity-90">Total: {anotacoesCount}</span>
+              <span className="text-xs opacity-90">({anotacoes.length} anotações)</span>
             </Button>
 
             <a
               href="https://jworg.zoom.us/j/84813202624"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-sky-400 to-blue-400 hover:from-sky-500 hover:to-blue-500 text-white font-semibold shadow-lg h-20 text-sm rounded-md transition-colors w-full"
+              className="inline-flex flex-col items-center justify-center gap-1 bg-gradient-to-r from-sky-400 to-blue-400 hover:from-sky-500 hover:to-blue-500 text-white font-semibold shadow-lg h-20 text-sm rounded-md transition-colors w-full"
             >
-              <Video className="w-4 h-4 flex-shrink-0" />
-              <div className="flex flex-col items-center gap-0.5">
-                <span className="leading-tight">Reunião Zoom</span>
-                <span className="text-xs font-bold leading-none opacity-90">Senha: 202020</span>
+              <div className="flex items-center gap-2">
+                <Video className="w-5 h-5" />
+                <span>Reunião Zoom</span>
               </div>
+              <span className="text-xs opacity-90">Entrar na reunião</span>
             </a>
           </div>
 
           {/* Hours Grid */}
-          <div>
-            <HoursGrid entries={entries} onDelete={handleDeleteEntry} onEdit={handleEdit} />
-          </div>
+          <HoursGrid entries={entries} onEdit={handleEdit} onDelete={handleDeleteEntry} />
         </div>
       </div>
 
       {/* Dialogs */}
       <AddHoursDialog
-        open={isDialogOpen}
-        onOpenChange={(open) => {
-          setIsDialogOpen(open)
-          if (!open) {
-            setEditingEntry(null)
-          }
-        }}
-        onAdd={handleAddEntry}
-        onEdit={handleEditEntry}
+        open={showAddHours}
+        onOpenChange={setShowAddHours}
+        onSuccess={fetchEntries}
+        selectedDate={currentDate}
         editingEntry={editingEntry}
-        currentMonth={currentMonth}
-        currentYear={currentYear}
       />
 
-      <BibleStudiesDialog
-        open={isBibleStudiesDialogOpen}
-        onOpenChange={setIsBibleStudiesDialogOpen}
-        currentMonth={currentMonth}
-        currentYear={currentYear}
-        usuarioId={usuario.id}
+      <CartasDialog open={showCartas} onOpenChange={setShowCartas} cartas={cartas} onCartasChange={fetchCartas} />
+
+      <AnotacoesDialog
+        open={showAnotacoes}
+        onOpenChange={setShowAnotacoes}
+        anotacoes={anotacoes}
+        onAnotacoesChange={fetchAnotacoes}
       />
 
-      <AnotacoesDialog open={isAnotacoesDialogOpen} onOpenChange={setIsAnotacoesDialogOpen} usuarioId={usuario.id} />
+      {/* Motivation Modal */}
+      <MotivationModal open={showMotivation} onOpenChange={setShowMotivation} hoursRemaining={hoursRemaining} />
+
+      {/* Love Message Modal */}
+      <LoveMessageModal open={showLoveMessage} onOpenChange={setShowLoveMessage} />
     </div>
   )
-}
-
-const handlePreviousMonth = (setCurrentMonth: any, setCurrentYear: any, currentMonth: any, currentYear: any) => {
-  if (currentMonth === 0) {
-    setCurrentMonth(11)
-    setCurrentYear(currentYear - 1)
-  } else {
-    setCurrentMonth(currentMonth - 1)
-  }
-}
-
-const handleNextMonth = (setCurrentMonth: any, setCurrentYear: any, currentMonth: any, currentYear: any) => {
-  if (currentMonth === 11) {
-    setCurrentMonth(0)
-    setCurrentYear(currentYear + 1)
-  } else {
-    setCurrentMonth(currentMonth + 1)
-  }
 }
