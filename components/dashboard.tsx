@@ -96,6 +96,9 @@ export default function Dashboard({ onLogout, usuario }: DashboardProps) {
     "Dezembro",
   ]
 
+  const currentMonth = currentDate.getMonth()
+  const currentYear = currentDate.getFullYear()
+
   useEffect(() => {
     setOnline(isOnline())
 
@@ -255,7 +258,7 @@ export default function Dashboard({ onLogout, usuario }: DashboardProps) {
     setCurrentDate(newDate)
   }
 
-  const handleAddEntry = async (entry: Omit<HourEntry, "id">) => {
+  const handleAddHours = async (entry: Omit<HourEntry, "id">) => {
     const dataRegistro = new Date(entry.date).toISOString().split("T")[0]
     const newEntry = {
       ...entry,
@@ -311,7 +314,7 @@ export default function Dashboard({ onLogout, usuario }: DashboardProps) {
     }
   }
 
-  const handleEditEntry = async (id: string, entry: Omit<HourEntry, "id">) => {
+  const handleEditHours = async (id: string, entry: Omit<HourEntry, "id">) => {
     const dataRegistro = new Date(entry.date).toISOString().split("T")[0]
 
     const updatedEntries = entries.map((e) => (e.id === id ? { ...entry, id } : e))
@@ -681,9 +684,11 @@ export default function Dashboard({ onLogout, usuario }: DashboardProps) {
       <AddHoursDialog
         open={showAddHours}
         onOpenChange={setShowAddHours}
-        onSuccess={fetchEntries}
-        selectedDate={currentDate}
+        onAdd={handleAddHours}
+        onEdit={handleEditHours}
         editingEntry={editingEntry}
+        currentMonth={currentMonth}
+        currentYear={currentYear}
       />
 
       <CartasDialog open={showCartas} onOpenChange={setShowCartas} cartas={cartas} onCartasChange={fetchCartas} />

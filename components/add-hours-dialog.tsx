@@ -44,23 +44,30 @@ export default function AddHoursDialog({
   currentMonth,
   currentYear,
 }: AddHoursDialogProps) {
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date(currentYear, currentMonth, 1))
+  const getValidDate = (year: number, month: number, day = 1) => {
+    const date = new Date(year, month, day)
+    return isNaN(date.getTime()) ? new Date() : date
+  }
+
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(getValidDate(currentYear, currentMonth))
   const [hours, setHours] = useState("")
   const [type, setType] = useState<HourEntry["type"]>("Pregação")
   const [error, setError] = useState("")
-  const [calendarMonth, setCalendarMonth] = useState<Date>(new Date(currentYear, currentMonth, 1))
+  const [calendarMonth, setCalendarMonth] = useState<Date>(getValidDate(currentYear, currentMonth))
 
   useEffect(() => {
     if (editingEntry && open) {
       const entryDate = new Date(editingEntry.date)
-      setSelectedDate(entryDate)
-      setCalendarMonth(entryDate)
+      if (!isNaN(entryDate.getTime())) {
+        setSelectedDate(entryDate)
+        setCalendarMonth(entryDate)
+      }
       const totalMinutes = decimalToMinutes(editingEntry.hours)
       const hoursStr = minutesToHoursString(totalMinutes)
       setHours(hoursStr)
       setType(editingEntry.type)
     } else if (open) {
-      const newDate = new Date(currentYear, currentMonth, 1)
+      const newDate = getValidDate(currentYear, currentMonth)
       setSelectedDate(newDate)
       setCalendarMonth(newDate)
       setHours("")
@@ -109,7 +116,7 @@ export default function AddHoursDialog({
       onAdd(entryData)
     }
 
-    const resetDate = new Date(currentYear, currentMonth, 1)
+    const resetDate = getValidDate(currentYear, currentMonth)
     setSelectedDate(resetDate)
     setCalendarMonth(resetDate)
     setHours("")
@@ -138,9 +145,8 @@ export default function AddHoursDialog({
                   onSelect={setSelectedDate}
                   month={calendarMonth}
                   onMonthChange={(date) => {
-                    setCalendarMonth(date)
-                    if (!selectedDate) {
-                      setSelectedDate(date)
+                    if (date && !isNaN(date.getTime())) {
+                      setCalendarMonth(date)
                     }
                   }}
                   className="rounded-md"
