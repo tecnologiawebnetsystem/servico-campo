@@ -21,6 +21,7 @@ import CartasDialog from "@/components/cartas-dialog"
 import AnotacoesDialog from "@/components/anotacoes-dialog"
 import { MotivationModal } from "@/components/motivation-modal"
 import LoveMessageModal from "@/components/love-message-modal"
+import CongratulationsModal from "@/components/congratulations-modal"
 import HoursGrid from "@/components/hours-grid"
 import { decimalToMinutes, minutesToHoursString } from "@/lib/time-utils"
 import {
@@ -78,6 +79,7 @@ export default function Dashboard({ onLogout, usuario }: DashboardProps) {
   const [bibleStudiesCount, setBibleStudiesCount] = useState(0)
   const [showLoveMessage, setShowLoveMessage] = useState(false)
   const [totalHours, setTotalHours] = useState(0)
+  const [showCongratulations, setShowCongratulations] = useState(false)
 
   const monthNames = [
     "Janeiro",
@@ -220,7 +222,12 @@ export default function Dashboard({ onLogout, usuario }: DashboardProps) {
         setShowMotivation(true)
       }, 1000)
     }
-  }, []) // Executa apenas ao montar o componente (cada login)
+
+    // Mostrar modal de parabéns se completar 30 horas
+    if (totalHours >= 30) {
+      setShowCongratulations(true)
+    }
+  }, [totalHours]) // Executa apenas ao montar o componente (cada login)
 
   useEffect(() => {
     const totalMinutes = entries.reduce((sum, entry) => {
@@ -693,6 +700,9 @@ export default function Dashboard({ onLogout, usuario }: DashboardProps) {
 
       {/* Love Message Modal */}
       <LoveMessageModal open={showLoveMessage} onOpenChange={setShowLoveMessage} />
+
+      {/* Congratulations Modal */}
+      {showCongratulations && <CongratulationsModal totalHours={totalHours} userName={usuario.nome} />}
     </div>
   )
 }

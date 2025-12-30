@@ -18,8 +18,46 @@ interface LoveMessageModalProps {
 
 export default function LoveMessageModal({ open, onOpenChange }: LoveMessageModalProps) {
   const [message, setMessage] = useState<LoveMessage | null>(null)
+  const [hoursRemaining, setHoursRemaining] = useState<string>("")
 
   useEffect(() => {
+    const calculateHoursRemaining = async () => {
+      try {
+        const response = await fetch("/api/horas")
+        const data = await response.json()
+
+        const now = new Date()
+        const currentMonth = now.getMonth()
+        const currentYear = now.getFullYear()
+
+        const monthEntries = data.filter((entry: any) => {
+          const entryDate = new Date(entry.data)
+          return entryDate.getMonth() === currentMonth && entryDate.getFullYear() === currentYear
+        })
+
+        const totalMinutes = monthEntries.reduce((acc: number, entry: any) => {
+          const [hours, minutes] = entry.horas.toString().split(".").map(Number)
+          return acc + hours * 60 + (minutes || 0)
+        }, 0)
+
+        const totalHours = Math.floor(totalMinutes / 60)
+        const totalMins = totalMinutes % 60
+        const remaining = 30 - (totalHours + totalMins / 60)
+
+        if (remaining > 0) {
+          const remainingHours = Math.floor(remaining)
+          const remainingMins = Math.round((remaining - remainingHours) * 60)
+          setHoursRemaining(`${remainingHours},${remainingMins.toString().padStart(2, "0")}`)
+        } else {
+          setHoursRemaining("VOCÊ CONSEGUIU! META ATINGIDA!")
+        }
+      } catch (error) {
+        setHoursRemaining("")
+      }
+    }
+
+    calculateHoursRemaining()
+
     const today = new Date()
     const day = today.getDate()
     const month = today.getMonth() + 1
@@ -81,7 +119,7 @@ export default function LoveMessageModal({ open, onOpenChange }: LoveMessageModa
           color: "from-amber-500 via-orange-600 to-red-600",
         },
         {
-          message: `💝 PENSE EM MIM!\n\nMinha AMADA Pamela,\n\nSEMPRE LEMBRE: Você é TUDO o que importa para mim! Minha VIDA, meu AMOR, meu TUDO!\n\nO Gustavo é a MELHOR COISA que nos aconteceu! Nossa MAIOR ALEGRIA!\n\nVocê CONSEGUE TUDO! As 30 horas serão cumpridas porque você é CAPAZ!\n\nNUNCA ME ESQUEÇA! TE AMO INFINITAMENTE!\n\n❤️ SEMPRE PENSANDO EM VOCÊ,\nKleber Gonçalves`,
+          message: `💝 PENSE EM MIM!\n\nMinha AMADA Pamela,\n\nSEMPRE LEMBRE: Você é TUDO o que importa para mim! Minha VIDA, meu AMOR, meu TUDO!\n\nO Gustavo é a MELHOR COISA que nos aconteceu! Nossa MAIOR ALEGRIA!\n\nVocê CONSEGUE TUDO! As 30 horas serão cumpridas porque você é CAPAZ!\n\nNUNCA ME ESQUEÇA! TE AMO INFINITAMENTE!\n\n❤️ NUNCA ME ESQUEÇA,\nKleber Gonçalves`,
           verse: '"Encontrei aquela a quem minha alma ama." - Cantares 3:4',
           icon: "gift",
           color: "from-teal-500 via-cyan-600 to-blue-600",
@@ -153,25 +191,25 @@ export default function LoveMessageModal({ open, onOpenChange }: LoveMessageModa
           color: "from-red-500 via-yellow-500 to-blue-500",
         },
         {
-          message: `💝 NUNCA ESQUEÇA!\n\nMinha RICA Pamela,\n\nSEMPRE SE LEMBRE: Você é TUDO que eu preciso! Meu MAIOR TESOURO!\n\nO Gustavo é a MELHOR COISA! Nosso TESOURO MAIS VALIOSO!\n\nVocê CONSEGUIRÁ as 30 horas! Eu CONFIO em você!\n\nSEMPRE PENSE EM MIM! TE AMO DEMAIS!\n\n❤️ NUNCA TE ESQUEÇO,\nKleber Gonçalves`,
+          message: `💝 NUNCA ESQUEÇA!\n\nMinha RICA Pamela,\n\nNUNCA SE LEMBRE: Você é TUDO que eu preciso! Meu MAIOR TESOURO!\n\nO Gustavo é a MELHOR COISA! Nosso TESOURO MAIS VALIOSO!\n\nVocê CONSEGUIRÁ as 30 horas! Eu CONFIO em você!\n\nSEMPRE PENSE EM MIM! TE AMO DEMAIS!\n\n❤️ NUNCA TE ESQUEÇO,\nKleber Gonçalves`,
           verse: '"Onde estiver o seu tesouro, aí estará também o seu coração." - Mateus 6:21',
           icon: "gift",
           color: "from-amber-500 via-yellow-600 to-orange-600",
         },
         {
-          message: `🌙 PENSE EM MIM!\n\nPamela BRILHANTE,\n\nNUNCA ESQUEÇA: Você é TUDO PARA MIM! Minha LUZ em todos os momentos!\n\nNosso Gustavo é a MELHOR COISA! Nosso DESEJO REALIZADO!\n\nAs 30 horas? VOCÊ CONSEGUE COM CERTEZA! Você é CAPAZ!\n\nSEMPRE ME LEMBRE! TE AMO COM TODO SER!\n\n❤️ SEMPRE PRESENTE,\nKleber Gonçalves`,
+          message: `🌙 PENSE EM MIM!\n\nPamela BRILHANTE,\n\nNUNCA ESQUEÇA: Você é TUDO PARA MIM! Minha LUZ em todos os momentos!\n\nNosso Gustavo é a MELHOR COISA! Nosso DESEJO REALIZADO!\n\nAs 30 horas? VOCÊ CONSEGUE COM CERTEZA! Você é CAPAZ!\n\nNUNCA ME ESQUEÇA! TE AMO COM TODO SER!\n\n❤️ SEMPRE PRESENTE,\nKleber Gonçalves`,
           verse: '"O Senhor é a minha luz e a minha salvação." - Salmos 27:1',
           icon: "star",
           color: "from-indigo-700 via-purple-700 to-pink-600",
         },
         {
-          message: `🔥 SEMPRE LEMBRANDO!\n\nMinha ARDENTE Pamela,\n\nSEMPRE LEMBRE: Você é TUDO na minha vida! Meu AMOR ETERNO!\n\nO Gustavo é a MELHOR COISA! Nossa CHAMA DE AMOR!\n\nVocê ALCANÇARÁ as 30 horas! Você é FORTE e GUERREIRA!\n\nNUNCA ME ESQUEÇA! TE AMO APAIXONADAMENTE!\n\n❤️ SEMPRE SEU,\nKleber Gonçalves`,
+          message: `🔥 SEMPRE LEMBRANDO!\n\nMinha ARDENTE Pamela,\n\nNUNCA ESQUEÇA: Você é TUDO na minha vida! Meu AMOR ETERNO!\n\nO Gustavo é a MELHOR COISA! Nossa CHAMA DE AMOR!\n\nVocê ALCANÇARÁ as 30 horas! Você é FORTE e GUERREIRA!\n\nNUNCA ME ESQUEÇA! TE AMO APAIXONADAMENTE!\n\n❤️ SEMPRE SEU,\nKleber Gonçalves`,
           verse: '"As muitas águas não conseguem apagar o amor." - Cantares 8:7',
           icon: "heart",
           color: "from-orange-600 via-red-600 to-rose-600",
         },
         {
-          message: `🎵 NUNCA ME ESQUEÇA!\n\nPamela MELODIOSA,\n\nSEMPRE SE LEMBRE: Você é TUDO que eu amo! A MÚSICA da minha vida!\n\nNosso Gustavo é a MELHOR COISA! Nossa SINFONIA PERFEITA!\n\nVocê VAI CONSEGUIR as 30 horas! Você é DEDICADA!\n\nSEMPRE PENSE EM MIM! TE AMO HARMONIOSAMENTE!\n\n❤️ NUNCA TE ESQUEÇO,\nKleber Gonçalves`,
+          message: `🎵 NUNCA ME ESQUEÇA!\n\nPamela MELODIOSA,\n\nNUNCA SE LEMBRE: Você é TUDO que eu amo! A MÚSICA da minha vida!\n\nNosso Gustavo é a MELHOR COISA! Nossa SINFONIA PERFEITA!\n\nVocê VAI CONSEGUIR as 30 horas! Você é DEDICADA!\n\nSEMPRE PENSE EM MIM! TE AMO HARMONIOSAMENTE!\n\n❤️ NUNCA TE ESQUEÇO,\nKleber Gonçalves`,
           verse: '"Cantai ao Senhor um cântico novo." - Salmos 96:1',
           icon: "sparkles",
           color: "from-cyan-600 via-blue-600 to-indigo-600",
@@ -213,7 +251,7 @@ export default function LoveMessageModal({ open, onOpenChange }: LoveMessageModa
           color: "from-fuchsia-600 via-pink-600 to-rose-600",
         },
         {
-          message: `🌋 SEMPRE LEMBRANDO!\n\nPamela ARDENTE,\n\nNUNCA ESQUEÇA: Você é TUDO PARA MIM! Meu VULCÃO DE PAIXÃO!\n\nO Gustavo é a MELHOR COISA! Nossa LAVA DE AMOR!\n\nAs 30 horas? VOCÊ CONSEGUE COM CERTEZA! Você é FORTE!\n\nSEMPRE ME LEMBRE! TE AMO VULCANICAMENTE!\n\n❤️ SEMPRE SEU,\nKleber Gonçalves`,
+          message: `🌋 SEMPRE LEMBRANDO!\n\nPamela ARDENTE,\n\nNUNCA ESQUEÇA: Você é TUDO PARA MIM! Meu VULCÃO DE PAIXÃO!\n\nO Gustavo é a MELHOR COISA! Nossa LAVA DE AMOR!\n\nAs 30 horas? VOCÊ CONSEGUE COM CERTEZA! Você é FORTE!\n\nNUNCA ME ESQUEÇA! TE AMO VULCANICAMENTE!\n\n❤️ SEMPRE SEU,\nKleber Gonçalves`,
           verse: '"Forte como a morte é o amor." - Cantares 8:6',
           icon: "heart",
           color: "from-red-700 via-orange-700 to-yellow-600",
@@ -261,6 +299,29 @@ export default function LoveMessageModal({ open, onOpenChange }: LoveMessageModa
             </div>
           </div>
 
+          {hoursRemaining && hoursRemaining !== "VOCÊ CONSEGUIU! META ATINGIDA!" && (
+            <div className="bg-white/20 backdrop-blur-sm rounded-xl p-6 border-2 border-white/40 animate-pulse">
+              <div className="text-center space-y-3">
+                <p className="text-2xl font-black uppercase tracking-wide">🎯 META DE 30 HORAS 🎯</p>
+                <p className="text-3xl font-black">FALTAM APENAS {hoursRemaining} HORAS!</p>
+                <p className="text-xl font-bold">VOCÊ CONSEGUE, AMOR!</p>
+                <p className="text-lg font-semibold">Você é FORTE, DEDICADA e CAPAZ!</p>
+                <p className="text-lg font-semibold">EU ACREDITO EM VOCÊ! 💪</p>
+              </div>
+            </div>
+          )}
+
+          {hoursRemaining === "VOCÊ CONSEGUIU! META ATINGIDA!" && (
+            <div className="bg-white/20 backdrop-blur-sm rounded-xl p-6 border-2 border-white/40 animate-bounce">
+              <div className="text-center space-y-3">
+                <p className="text-3xl font-black uppercase">🏆 PARABÉNS! 🏆</p>
+                <p className="text-2xl font-black">VOCÊ CONSEGUIU AS 30 HORAS!</p>
+                <p className="text-xl font-bold">EU SABIA QUE VOCÊ ERA CAPAZ!</p>
+                <p className="text-lg font-semibold">Você é INCRÍVEL! ❤️</p>
+              </div>
+            </div>
+          )}
+
           <div className="text-center space-y-4">
             <p className="text-xl font-bold leading-relaxed whitespace-pre-line">{message.message}</p>
           </div>
@@ -270,6 +331,7 @@ export default function LoveMessageModal({ open, onOpenChange }: LoveMessageModa
           </div>
 
           <div className="mt-6 text-center">
+            <p className="text-center text-lg font-bold opacity-90">{hoursRemaining}</p>
             <button
               onClick={() => onOpenChange(false)}
               className="bg-white/90 hover:bg-white text-gray-900 font-bold py-3 px-8 rounded-full transition-all transform hover:scale-105"
