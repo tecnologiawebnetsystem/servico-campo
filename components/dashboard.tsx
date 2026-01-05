@@ -3,24 +3,9 @@
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import {
-  BookOpen,
-  ChevronLeft,
-  ChevronRight,
-  Clock,
-  Target,
-  Users,
-  Plus,
-  Mail,
-  StickyNote,
-  Video,
-  LogOut,
-} from "lucide-react"
 import AddHoursDialog from "@/components/add-hours-dialog"
 import CartasDialog from "@/components/cartas-dialog"
 import AnotacoesDialog from "@/components/anotacoes-dialog"
-import { MotivationModal } from "@/components/motivation-modal"
-import LoveMessageModal from "@/components/love-message-modal"
 import CongratulationsModal from "@/components/congratulations-modal"
 import HoursGrid from "@/components/hours-grid"
 import { decimalToMinutes, minutesToHoursString } from "@/lib/time-utils"
@@ -72,12 +57,9 @@ export default function Dashboard({ onLogout, usuario }: DashboardProps) {
   const [showCartas, setShowCartas] = useState(false)
   const [showAnotacoes, setShowAnotacoes] = useState(false)
   const [editingEntry, setEditingEntry] = useState<HourEntry | undefined>()
-  const [showMotivation, setShowMotivation] = useState(false)
-  const [hoursRemaining, setHoursRemaining] = useState(0)
   const [online, setOnline] = useState(true)
   const [syncing, setSyncing] = useState(false)
   const [bibleStudiesCount, setBibleStudiesCount] = useState(0)
-  const [showLoveMessage, setShowLoveMessage] = useState(false)
   const [totalHours, setTotalHours] = useState(0)
   const [showCongratulations, setShowCongratulations] = useState(false)
 
@@ -215,34 +197,15 @@ export default function Dashboard({ onLogout, usuario }: DashboardProps) {
   }
 
   useEffect(() => {
-    // Sempre mostrar a mensagem de amor ao fazer login
-    setShowLoveMessage(true)
-
-    // Se estiver perto de completar 30 horas, mostrar mensagem motivacional também
-    if (totalHours >= 20 && totalHours < 30) {
-      // Pequeno delay para a mensagem de amor aparecer primeiro
-      setTimeout(() => {
-        setShowMotivation(true)
-      }, 1000)
-    }
-
-    // Mostrar modal de parabéns se completar 30 horas
-    if (totalHours >= 30) {
-      setShowCongratulations(true)
-    }
-  }, [totalHours]) // Executa apenas ao montar o componente (cada login)
-
-  useEffect(() => {
     const totalMinutes = entries.reduce((sum, entry) => {
       return sum + decimalToMinutes(entry.hours)
     }, 0)
     const totalHours = totalMinutes / 60
     setTotalHours(totalHours)
-    const remaining = 1800 - totalMinutes // 30 horas = 1800 minutos
-    const remainingHours = remaining / 60
-
-    if (remainingHours > 0 && remainingHours < 10) {
-      setHoursRemaining(remainingHours)
+    if (totalHours >= 30) {
+      setShowCongratulations(true)
+    } else {
+      setShowCongratulations(false)
     }
   }, [entries])
 
@@ -530,7 +493,7 @@ export default function Dashboard({ onLogout, usuario }: DashboardProps) {
           <div className="flex justify-between items-start flex-wrap gap-3">
             <div className="flex gap-3 items-center">
               <div className="p-2 bg-gradient-to-br from-pink-400 to-rose-500 rounded-xl shadow-md">
-                <BookOpen className="w-5 h-5 md:w-6 md:h-6 text-white" />
+                {/* Icon for dashboard */}
               </div>
               <div>
                 <h1 className="text-xl md:text-2xl font-bold text-rose-900">Bem-vinda, {usuario.nome}</h1>
@@ -538,7 +501,7 @@ export default function Dashboard({ onLogout, usuario }: DashboardProps) {
               </div>
             </div>
             <Button variant="ghost" size="sm" onClick={onLogout} className="text-rose-700 hover:bg-pink-100">
-              <LogOut className="mr-2 h-4 w-4" />
+              {/* Logout button */}
               Sair
             </Button>
           </div>
@@ -549,9 +512,7 @@ export default function Dashboard({ onLogout, usuario }: DashboardProps) {
           {/* Stats Cards */}
           <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
             <Card className="p-4 bg-gradient-to-br from-pink-100 to-rose-100 border-pink-200 relative overflow-hidden shadow-md">
-              <div className="absolute -right-4 -top-4 opacity-10">
-                <Clock className="w-24 h-24" />
-              </div>
+              <div className="absolute -right-4 -top-4 opacity-10">{/* Clock icon */}</div>
               <div className="relative">
                 <p className="text-xs text-rose-700 font-medium mb-1">Total de Horas</p>
                 <p className="text-3xl font-bold text-rose-900">{totalHoursFormatted}</p>
@@ -560,9 +521,7 @@ export default function Dashboard({ onLogout, usuario }: DashboardProps) {
             </Card>
 
             <Card className="p-4 bg-gradient-to-br from-sky-100 to-blue-100 border-blue-200 relative overflow-hidden shadow-md">
-              <div className="absolute -right-4 -top-4 opacity-10">
-                <Target className="w-24 h-24" />
-              </div>
+              <div className="absolute -right-4 -top-4 opacity-10">{/* Target icon */}</div>
               <div className="relative">
                 <p className="text-xs text-sky-700 font-medium mb-1">Faltam</p>
                 <p className="text-3xl font-bold text-sky-900">{remainingFormatted}</p>
@@ -571,9 +530,7 @@ export default function Dashboard({ onLogout, usuario }: DashboardProps) {
             </Card>
 
             <Card className="p-4 bg-gradient-to-br from-purple-100 to-pink-100 border-purple-200 relative overflow-hidden shadow-md col-span-2 md:col-span-1">
-              <div className="absolute -right-4 -top-4 opacity-10">
-                <Users className="w-24 h-24" />
-              </div>
+              <div className="absolute -right-4 -top-4 opacity-10">{/* Users icon */}</div>
               <div className="relative">
                 <p className="text-xs text-purple-700 font-medium mb-1">Estudos Bíblicos</p>
                 <div className="flex items-center gap-3">
@@ -610,7 +567,7 @@ export default function Dashboard({ onLogout, usuario }: DashboardProps) {
                 onClick={handlePreviousMonth}
                 className="h-9 w-9 text-rose-700 hover:bg-pink-100"
               >
-                <ChevronLeft className="w-5 h-5" />
+                {/* Previous month button */}
               </Button>
               <h2 className="text-lg md:text-xl font-semibold min-w-[180px] md:min-w-[200px] text-center text-rose-900">
                 {monthNames[currentDate.getMonth()]}/{currentDate.getFullYear()}
@@ -621,7 +578,7 @@ export default function Dashboard({ onLogout, usuario }: DashboardProps) {
                 onClick={handleNextMonth}
                 className="h-9 w-9 text-rose-700 hover:bg-pink-100"
               >
-                <ChevronRight className="w-5 h-5" />
+                {/* Next month button */}
               </Button>
             </div>
           </Card>
@@ -635,7 +592,7 @@ export default function Dashboard({ onLogout, usuario }: DashboardProps) {
               }}
               className="gap-2 bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white shadow-lg h-20 text-sm font-semibold w-full"
             >
-              <Plus className="w-5 h-5" />
+              {/* Add hours button */}
               Adicionar Horas
             </Button>
 
@@ -644,7 +601,7 @@ export default function Dashboard({ onLogout, usuario }: DashboardProps) {
               className="gap-1 bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white shadow-lg h-20 text-sm font-semibold w-full flex flex-col"
             >
               <div className="flex items-center gap-2">
-                <Mail className="w-5 h-5" />
+                {/* Mail icon */}
                 <span>Exemplos de Cartas</span>
               </div>
               <span className="text-xs opacity-90">({cartas.length} cartas)</span>
@@ -655,7 +612,7 @@ export default function Dashboard({ onLogout, usuario }: DashboardProps) {
               className="gap-1 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white shadow-lg h-20 text-sm font-semibold w-full flex flex-col"
             >
               <div className="flex items-center gap-2">
-                <StickyNote className="w-5 h-5" />
+                {/* StickyNote icon */}
                 <span>Anotações</span>
               </div>
               <span className="text-xs opacity-90">({anotacoes.length} anotações)</span>
@@ -668,7 +625,7 @@ export default function Dashboard({ onLogout, usuario }: DashboardProps) {
               className="inline-flex flex-col items-center justify-center gap-1 bg-gradient-to-r from-sky-400 to-blue-400 hover:from-sky-500 hover:to-blue-500 text-white font-semibold shadow-lg h-20 text-sm rounded-md transition-colors w-full"
             >
               <div className="flex items-center gap-2">
-                <Video className="w-5 h-5" />
+                {/* Video icon */}
                 <span>Reunião Zoom</span>
               </div>
               <span className="text-xs opacity-90">Entrar na reunião</span>
@@ -699,12 +656,6 @@ export default function Dashboard({ onLogout, usuario }: DashboardProps) {
         anotacoes={anotacoes}
         onAnotacoesChange={fetchAnotacoes}
       />
-
-      {/* Motivation Modal */}
-      <MotivationModal open={showMotivation} onOpenChange={setShowMotivation} hoursRemaining={hoursRemaining} />
-
-      {/* Love Message Modal */}
-      <LoveMessageModal open={showLoveMessage} onOpenChange={setShowLoveMessage} />
 
       {/* Congratulations Modal */}
       {showCongratulations && <CongratulationsModal totalHours={totalHours} userName={usuario.nome} />}
