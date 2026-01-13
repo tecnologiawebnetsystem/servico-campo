@@ -35,14 +35,19 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const { usuarioId, dia, horas, modalidade, mes, ano } = await request.json()
+    const body = await request.json()
+    console.log("[v0] POST /api/horas - Recebendo dados:", body)
+
+    const { usuarioId, dia, horas, modalidade, mes, ano } = body
 
     if (!usuarioId || !dia || !horas || !modalidade || mes === undefined || ano === undefined) {
+      console.error("[v0] Dados incompletos:", { usuarioId, dia, horas, modalidade, mes, ano })
       return NextResponse.json({ error: "Dados incompletos" }, { status: 400 })
     }
 
     // Criar data no formato YYYY-MM-DD
-    const data = `${ano}-${String(mes).padStart(2, "0")}-${String(dia).padStart(2, "0")}`
+    const data = `${ano}-${String(mes + 1).padStart(2, "0")}-${String(dia).padStart(2, "0")}`
+    console.log("[v0] Data formatada:", data)
 
     const registro = await insertRegistroHoras(
       Number(usuarioId),
@@ -53,6 +58,7 @@ export async function POST(request: Request) {
       modalidade,
     )
 
+    console.log("[v0] Registro salvo com sucesso:", registro)
     return NextResponse.json({ success: true, id: registro.id })
   } catch (error) {
     console.error("[v0] Erro ao adicionar horas:", error)
@@ -69,7 +75,7 @@ export async function PUT(request: Request) {
     }
 
     // Criar data no formato YYYY-MM-DD
-    const data = `${ano}-${String(mes).padStart(2, "0")}-${String(dia).padStart(2, "0")}`
+    const data = `${ano}-${String(mes + 1).padStart(2, "0")}-${String(dia).padStart(2, "0")}`
 
     const registro = await updateRegistroHoras(
       Number(id),

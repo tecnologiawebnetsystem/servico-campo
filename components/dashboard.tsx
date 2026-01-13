@@ -19,6 +19,7 @@ import {
   getOfflineData,
 } from "@/lib/offline-sync"
 import OnlineStatus from "@/components/online-status"
+import { ChevronLeft, ChevronRight } from "lucide-react"
 
 export interface HourEntry {
   id: string
@@ -222,7 +223,8 @@ export default function Dashboard({ onLogout, usuario }: DashboardProps) {
   }
 
   const handleAddHours = async (entry: Omit<HourEntry, "id">) => {
-    const dataRegistro = new Date(entry.date).toISOString().split("T")[0]
+    console.log("[v0] handleAddHours chamado com:", entry)
+
     const newEntry = {
       ...entry,
       id: `temp_${Date.now()}`,
@@ -239,38 +241,47 @@ export default function Dashboard({ onLogout, usuario }: DashboardProps) {
         dia: entry.day,
         horas: entry.hours,
         modalidade: entry.type,
-        dataRegistro,
         mes: currentDate.getMonth(),
         ano: currentDate.getFullYear(),
       })
+      console.log("[v0] Modo offline - ação adicionada à fila")
       return
     }
 
     try {
+      const payload = {
+        usuarioId: usuario.id,
+        dia: entry.day,
+        horas: entry.hours,
+        modalidade: entry.type,
+        mes: currentDate.getMonth(),
+        ano: currentDate.getFullYear(),
+      }
+
+      console.log("[v0] Enviando para API:", payload)
+
       const res = await fetch("/api/horas", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          usuarioId: usuario.id,
-          dia: entry.day,
-          horas: entry.hours,
-          modalidade: entry.type,
-          dataRegistro,
-          mes: currentDate.getMonth(),
-          ano: currentDate.getFullYear(),
-        }),
+        body: JSON.stringify(payload),
       })
 
+      const responseData = await res.json()
+      console.log("[v0] Resposta da API:", responseData)
+
       if (res.ok) {
-        fetchEntries()
+        console.log("[v0] Horas salvas com sucesso!")
+        await fetchEntries()
+      } else {
+        console.error("[v0] Erro na resposta da API:", responseData)
+        throw new Error(responseData.error || "Erro ao salvar")
       }
     } catch (error) {
-      console.error("Erro ao adicionar horas:", error)
+      console.error("[v0] Erro ao adicionar horas:", error)
       addOfflineAction("ADD_HORA", {
         dia: entry.day,
         horas: entry.hours,
         modalidade: entry.type,
-        dataRegistro,
         mes: currentDate.getMonth(),
         ano: currentDate.getFullYear(),
       })
@@ -567,7 +578,7 @@ export default function Dashboard({ onLogout, usuario }: DashboardProps) {
                 onClick={handlePreviousMonth}
                 className="h-9 w-9 text-rose-700 hover:bg-pink-100"
               >
-                {/* Previous month button */}
+                <ChevronLeft className="h-5 w-5" />
               </Button>
               <h2 className="text-lg md:text-xl font-semibold min-w-[180px] md:min-w-[200px] text-center text-rose-900">
                 {monthNames[currentDate.getMonth()]}/{currentDate.getFullYear()}
@@ -578,7 +589,7 @@ export default function Dashboard({ onLogout, usuario }: DashboardProps) {
                 onClick={handleNextMonth}
                 className="h-9 w-9 text-rose-700 hover:bg-pink-100"
               >
-                {/* Next month button */}
+                <ChevronRight className="h-5 w-5" />
               </Button>
             </div>
           </Card>
