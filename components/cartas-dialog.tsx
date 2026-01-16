@@ -35,6 +35,8 @@ export default function CartasDialog({ open, onOpenChange, usuarioId }: CartasDi
   const [searchQuery, setSearchQuery] = useState("")
   const online = isOnline()
 
+  const validUsuarioId = typeof usuarioId === "number" && !isNaN(usuarioId) ? usuarioId : 1
+
   useEffect(() => {
     if (open) {
       fetchCartas()
@@ -44,21 +46,24 @@ export default function CartasDialog({ open, onOpenChange, usuarioId }: CartasDi
   const fetchCartas = async () => {
     if (!online) {
       const offlineData = getOfflineData()
-      const key = `cartas_${usuarioId}`
+      const key = `cartas_${validUsuarioId}`
       if (offlineData[key]) {
-        setCartas(offlineData[key])
+        const data = offlineData[key]
+        setCartas(Array.isArray(data) ? data : [])
       }
       return
     }
 
     try {
       setLoading(true)
-      const res = await fetch(`/api/cartas?usuarioId=${usuarioId}`)
+      const res = await fetch(`/api/cartas?usuarioId=${validUsuarioId}`)
       const data = await res.json()
-      setCartas(data)
-      saveOfflineData(`cartas_${usuarioId}`, data)
+      const cartasArray = Array.isArray(data) ? data : data?.cartas || []
+      setCartas(cartasArray)
+      saveOfflineData(`cartas_${validUsuarioId}`, cartasArray)
     } catch (error) {
       console.error("Erro ao buscar cartas:", error)
+      setCartas([])
     } finally {
       setLoading(false)
     }
@@ -77,7 +82,7 @@ export default function CartasDialog({ open, onOpenChange, usuarioId }: CartasDi
     }
 
     setCartas([newCarta, ...cartas])
-    saveOfflineData(`cartas_${usuarioId}`, [newCarta, ...cartas])
+    saveOfflineData(`cartas_${validUsuarioId}`, [newCarta, ...cartas])
 
     if (!online) {
       addOfflineAction("ADD_CARTA", { titulo, texto })
@@ -92,7 +97,7 @@ export default function CartasDialog({ open, onOpenChange, usuarioId }: CartasDi
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          usuarioId,
+          usuarioId: validUsuarioId,
           titulo,
           texto,
         }),
@@ -120,7 +125,7 @@ export default function CartasDialog({ open, onOpenChange, usuarioId }: CartasDi
 
     const updatedCartas = cartas.filter((c) => c.id !== cartaToDelete)
     setCartas(updatedCartas)
-    saveOfflineData(`cartas_${usuarioId}`, updatedCartas)
+    saveOfflineData(`cartas_${validUsuarioId}`, updatedCartas)
 
     if (!online) {
       addOfflineAction("DELETE_CARTA", { id: cartaToDelete })
@@ -129,7 +134,7 @@ export default function CartasDialog({ open, onOpenChange, usuarioId }: CartasDi
     }
 
     try {
-      await fetch(`/api/cartas?id=${cartaToDelete}&usuarioId=${usuarioId}`, {
+      await fetch(`/api/cartas?id=${cartaToDelete}&usuarioId=${validUsuarioId}`, {
         method: "DELETE",
       })
     } catch (error) {
@@ -145,10 +150,13 @@ export default function CartasDialog({ open, onOpenChange, usuarioId }: CartasDi
     setShowViewer(true)
   }
 
-  const filteredCartas = cartas.filter((carta) => {
-    const query = searchQuery.toLowerCase()
-    return carta.titulo.toLowerCase().includes(query) || carta.texto.toLowerCase().includes(query)
-  })
+  const filteredCartas = Array.isArray(cartas)
+    ? cartas.filter((carta) => {
+        if (!carta || !carta.titulo || !carta.texto) return false
+        const query = searchQuery.toLowerCase()
+        return carta.titulo.toLowerCase().includes(query) || carta.texto.toLowerCase().includes(query)
+      })
+    : []
 
   return (
     <>

@@ -37,13 +37,16 @@ export default function AnotacoesDialog({ open, onOpenChange, usuarioId }: Anota
   }, [open])
 
   const fetchAnotacoes = async () => {
+    const validUsuarioId = typeof usuarioId === "number" && !isNaN(usuarioId) ? usuarioId : 1
+
     setLoading(true)
     try {
-      const res = await fetch(`/api/anotacoes?usuarioId=${usuarioId}`)
+      const res = await fetch(`/api/anotacoes?usuarioId=${validUsuarioId}`)
       const data = await res.json()
-      setAnotacoes(data)
+      setAnotacoes(Array.isArray(data) ? data : [])
     } catch (error) {
       console.error("Erro ao buscar anotações:", error)
+      setAnotacoes([])
     } finally {
       setLoading(false)
     }
@@ -100,44 +103,46 @@ export default function AnotacoesDialog({ open, onOpenChange, usuarioId }: Anota
               <div className="flex items-center justify-center py-12">
                 <Loader2 className="w-8 h-8 animate-spin text-purple-500" />
               </div>
-            ) : anotacoes.length === 0 ? (
+            ) : !Array.isArray(anotacoes) || anotacoes.length === 0 ? (
               <div className="text-center py-12 text-gray-500">
                 <p>Nenhuma anotação cadastrada.</p>
                 <p className="text-sm mt-2">Clique em "Adicionar Anotação" para começar.</p>
               </div>
             ) : (
               <div className="grid gap-4 md:grid-cols-2">
-                {anotacoes.map((anotacao) => (
-                  <Card key={anotacao.id} className="p-4 hover:shadow-lg transition-shadow border-purple-200">
-                    <div className="space-y-3">
-                      <h3 className="font-semibold text-lg text-purple-900 line-clamp-1">{anotacao.titulo}</h3>
-                      <p className="text-sm text-gray-600 line-clamp-2">{anotacao.descricao}</p>
-                      <div className="flex justify-between items-center pt-2">
-                        <span className="text-xs text-gray-500">
-                          {new Date(anotacao.data_criacao).toLocaleDateString("pt-BR")}
-                        </span>
-                        <div className="flex gap-2">
-                          <Button
-                            size="icon"
-                            variant="outline"
-                            onClick={() => setViewingAnotacao(anotacao)}
-                            className="h-8 w-8 text-blue-600 hover:bg-blue-50 border-blue-300"
-                          >
-                            <Eye className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            size="icon"
-                            variant="outline"
-                            onClick={() => handleDelete(anotacao.id)}
-                            className="h-8 w-8 text-red-600 hover:bg-red-50 border-red-300"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
+                {anotacoes.map((anotacao) =>
+                  anotacao && anotacao.id ? (
+                    <Card key={anotacao.id} className="p-4 hover:shadow-lg transition-shadow border-purple-200">
+                      <div className="space-y-3">
+                        <h3 className="font-semibold text-lg text-purple-900 line-clamp-1">{anotacao.titulo}</h3>
+                        <p className="text-sm text-gray-600 line-clamp-2">{anotacao.descricao}</p>
+                        <div className="flex justify-between items-center pt-2">
+                          <span className="text-xs text-gray-500">
+                            {anotacao.data_criacao ? new Date(anotacao.data_criacao).toLocaleDateString("pt-BR") : ""}
+                          </span>
+                          <div className="flex gap-2">
+                            <Button
+                              size="icon"
+                              variant="outline"
+                              onClick={() => setViewingAnotacao(anotacao)}
+                              className="h-8 w-8 text-blue-600 hover:bg-blue-50 border-blue-300"
+                            >
+                              <Eye className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              size="icon"
+                              variant="outline"
+                              onClick={() => handleDelete(anotacao.id)}
+                              className="h-8 w-8 text-red-600 hover:bg-red-50 border-red-300"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </Card>
-                ))}
+                    </Card>
+                  ) : null,
+                )}
               </div>
             )}
           </div>
