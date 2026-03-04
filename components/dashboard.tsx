@@ -204,7 +204,7 @@ export default function Dashboard({ onLogout, usuario }: DashboardProps) {
     }, 0)
     const totalHours = totalMinutes / 60
     setTotalHours(totalHours)
-    if (totalHours >= 30) {
+    if (totalHours >= 50) {
       setShowCongratulations(true)
     } else {
       setShowCongratulations(false)
@@ -469,8 +469,8 @@ export default function Dashboard({ onLogout, usuario }: DashboardProps) {
 
   const totalHoursFormatted = minutesToHoursString(totalMinutes)
 
-  // Calcular horas restantes para atingir 30
-  const remainingMinutes = 30 * 60 - totalMinutes
+  // Calcular horas restantes para atingir 50
+  const remainingMinutes = 50 * 60 - totalMinutes
   const remainingFormatted = remainingMinutes > 0 ? minutesToHoursString(remainingMinutes) : "0,00"
 
   return (
@@ -509,7 +509,7 @@ export default function Dashboard({ onLogout, usuario }: DashboardProps) {
               </div>
               <div>
                 <h1 className="text-xl md:text-2xl font-bold text-rose-900">Bem-vinda, {usuario.nome}</h1>
-                <p className="text-xs md:text-sm text-rose-700">Registre suas horas de serviço</p>
+                <p className="text-xs md:text-sm text-rose-700">Pioneiro Regular</p>
               </div>
             </div>
             <Button variant="ghost" size="sm" onClick={onLogout} className="text-rose-700 hover:bg-pink-100">
@@ -534,7 +534,7 @@ export default function Dashboard({ onLogout, usuario }: DashboardProps) {
               <div className="relative">
                 <p className="text-xs text-sky-700 font-medium mb-1">Faltam</p>
                 <p className="text-2xl md:text-3xl font-bold text-sky-900">{remainingFormatted}</p>
-                <p className="text-xs text-sky-600 mt-1">para 30 horas</p>
+                <p className="text-xs text-sky-600 mt-1">para 50 horas</p>
               </div>
             </Card>
 
