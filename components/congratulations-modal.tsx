@@ -14,8 +14,8 @@ export default function CongratulationsModal({ totalHours, userName }: Congratul
   const [open, setOpen] = useState(false)
 
   useEffect(() => {
-    // Só mostra se completou 30 horas ou mais
-    if (totalHours >= 30) {
+    // Só mostra se completou 50 horas ou mais
+    if (totalHours >= 50) {
       // Verifica se já mostrou neste mês
       const today = new Date()
       const monthKey = `congratulations_shown_${today.getFullYear()}_${today.getMonth()}`

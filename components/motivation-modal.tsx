@@ -14,13 +14,13 @@ const motivationalMessages = [
   {
     icon: Sparkles,
     title: "Você está quase lá!",
-    message: "Faltam apenas {hours} para completar sua meta de 30 horas! Continue assim, você é incrível!",
+    message: "Faltam apenas {hours} para completar sua meta de 50 horas! Continue assim, você é incrível!",
     color: "from-purple-500 to-pink-500",
   },
   {
     icon: TrendingUp,
     title: "Progresso Fantástico!",
-    message: "Uau! Só mais {hours} e você atinge 30 horas! Seu esforço está valendo a pena!",
+    message: "Uau! Só mais {hours} e você atinge 50 horas! Seu esforço está valendo a pena!",
     color: "from-blue-500 to-cyan-500",
   },
   {
@@ -32,7 +32,7 @@ const motivationalMessages = [
   {
     icon: Zap,
     title: "Quase Conquistado!",
-    message: "Incrível! Faltam só {hours} para completar 30 horas! Continue com essa energia!",
+    message: "Incrível! Faltam só {hours} para completar 50 horas! Continue com essa energia!",
     color: "from-orange-500 to-red-500",
   },
   {
@@ -44,13 +44,13 @@ const motivationalMessages = [
   {
     icon: Target,
     title: "Foco Total!",
-    message: "Sensacional! Apenas {hours} separam você das 30 horas. A linha de chegada está logo ali!",
+    message: "Sensacional! Apenas {hours} separam você das 50 horas. A linha de chegada está logo ali!",
     color: "from-teal-500 to-cyan-500",
   },
   {
     icon: TrendingUp,
     title: "Determinação Exemplar!",
-    message: "Que dedicação! Só mais {hours} e você alcança as 30 horas. Continue firme!",
+    message: "Que dedicação! Só mais {hours} e você alcança as 50 horas. Continue firme!",
     color: "from-rose-500 to-pink-500",
   },
   {
