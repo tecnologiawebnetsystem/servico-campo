@@ -4,11 +4,8 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import AddHoursDialog from "@/components/add-hours-dialog"
-import CartasDialog from "@/components/cartas-dialog"
-import AnotacoesDialog from "@/components/anotacoes-dialog"
 import CongratulationsModal from "@/components/congratulations-modal"
 import HoursGrid from "@/components/hours-grid"
-import Stopwatch from "@/components/stopwatch"
 import { decimalToMinutes, minutesToHoursString } from "@/lib/time-utils"
 import {
   isOnline,
@@ -30,16 +27,6 @@ export interface HourEntry {
   date: string
 }
 
-interface Carta {
-  id: number
-  content: string
-}
-
-interface Anotacao {
-  id: number
-  note: string
-}
-
 interface Usuario {
   id: number
   nome: string
@@ -53,11 +40,7 @@ interface DashboardProps {
 export default function Dashboard({ onLogout, usuario }: DashboardProps) {
   const [currentDate, setCurrentDate] = useState(new Date())
   const [entries, setEntries] = useState<HourEntry[]>([])
-  const [cartas, setCartas] = useState<Carta[]>([])
-  const [anotacoes, setAnotacoes] = useState<Anotacao[]>([])
   const [showAddHours, setShowAddHours] = useState(false)
-  const [showCartas, setShowCartas] = useState(false)
-  const [showAnotacoes, setShowAnotacoes] = useState(false)
   const [editingEntry, setEditingEntry] = useState<HourEntry | undefined>()
   const [online, setOnline] = useState(true)
   const [syncing, setSyncing] = useState(false)
@@ -94,8 +77,6 @@ export default function Dashboard({ onLogout, usuario }: DashboardProps) {
         await syncOfflineData(usuario.id)
         setSyncing(false)
         fetchEntries()
-        fetchCartas()
-        fetchAnotacoes()
         fetchEstudos()
       }
     })
@@ -120,8 +101,6 @@ export default function Dashboard({ onLogout, usuario }: DashboardProps) {
 
   useEffect(() => {
     fetchEntries()
-    fetchCartas()
-    fetchAnotacoes()
     fetchEstudos()
   }, [currentDate])
 
@@ -153,26 +132,6 @@ export default function Dashboard({ onLogout, usuario }: DashboardProps) {
       saveOfflineData(`horas_${usuario.id}_${currentDate.getMonth()}_${currentDate.getFullYear()}`, horasFormatadas)
     } catch (error) {
       console.error("Erro ao buscar horas:", error)
-    }
-  }
-
-  const fetchCartas = async () => {
-    try {
-      const res = await fetch(`/api/cartas?usuarioId=${usuario.id}`)
-      const data = await res.json()
-      setCartas(Array.isArray(data) ? data : [])
-    } catch (error) {
-      console.error("Erro ao buscar cartas:", error)
-    }
-  }
-
-  const fetchAnotacoes = async () => {
-    try {
-      const res = await fetch(`/api/anotacoes?usuarioId=${usuario.id}`)
-      const data = await res.json()
-      setAnotacoes(Array.isArray(data) ? data : [])
-    } catch (error) {
-      console.error("Erro ao buscar anotações:", error)
     }
   }
 
@@ -482,8 +441,6 @@ export default function Dashboard({ onLogout, usuario }: DashboardProps) {
               usuarioId={usuario.id}
               onSyncComplete={() => {
                 fetchEntries()
-                fetchCartas()
-                fetchAnotacoes()
                 fetchEstudos()
               }}
             />
@@ -521,7 +478,7 @@ export default function Dashboard({ onLogout, usuario }: DashboardProps) {
 
         {/* Conteúdo principal */}
         <div className="p-4 md:p-6 space-y-6">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             <Card className="p-4 bg-gradient-to-br from-pink-100 to-rose-100 border-pink-200 relative overflow-hidden shadow-md">
               <div className="relative">
                 <p className="text-xs text-rose-700 font-medium mb-1">Total de Horas</p>
@@ -538,7 +495,7 @@ export default function Dashboard({ onLogout, usuario }: DashboardProps) {
               </div>
             </Card>
 
-            <Card className="p-4 bg-gradient-to-br from-purple-100 to-pink-100 border-purple-200 relative overflow-hidden shadow-md">
+            <Card className="p-4 bg-gradient-to-br from-purple-100 to-pink-100 border-purple-200 relative overflow-hidden shadow-md col-span-2 md:col-span-1">
               <div className="relative">
                 <p className="text-xs text-purple-700 font-medium mb-1">Estudos Bíblicos</p>
                 <div className="flex items-center gap-2">
@@ -563,10 +520,6 @@ export default function Dashboard({ onLogout, usuario }: DashboardProps) {
                 </div>
                 <p className="text-xs text-purple-600 mt-1">este mês</p>
               </div>
-            </Card>
-
-            <Card className="p-4 bg-gradient-to-br from-emerald-100 to-teal-100 border-emerald-200 relative overflow-hidden shadow-md">
-              <Stopwatch usuarioId={usuario.id} />
             </Card>
           </div>
 
@@ -596,7 +549,7 @@ export default function Dashboard({ onLogout, usuario }: DashboardProps) {
           </Card>
 
           {/* Action Buttons */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
             <Button
               onClick={() => {
                 setEditingEntry(undefined)
@@ -606,28 +559,6 @@ export default function Dashboard({ onLogout, usuario }: DashboardProps) {
             >
               {/* Add hours button */}
               Adicionar Horas
-            </Button>
-
-            <Button
-              onClick={() => setShowCartas(true)}
-              className="gap-1 bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white shadow-lg h-20 text-sm font-semibold w-full flex flex-col"
-            >
-              <div className="flex items-center gap-2">
-                {/* Mail icon */}
-                <span>Exemplos de Cartas</span>
-              </div>
-              <span className="text-xs opacity-90">({cartas.length} cartas)</span>
-            </Button>
-
-            <Button
-              onClick={() => setShowAnotacoes(true)}
-              className="gap-1 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white shadow-lg h-20 text-sm font-semibold w-full flex flex-col"
-            >
-              <div className="flex items-center gap-2">
-                {/* StickyNote icon */}
-                <span>Anotações</span>
-              </div>
-              <span className="text-xs opacity-90">({anotacoes.length} anotações)</span>
             </Button>
 
             <a
@@ -658,15 +589,6 @@ export default function Dashboard({ onLogout, usuario }: DashboardProps) {
         editingEntry={editingEntry}
         currentMonth={currentMonth}
         currentYear={currentYear}
-      />
-
-      <CartasDialog open={showCartas} onOpenChange={setShowCartas} cartas={cartas} onCartasChange={fetchCartas} />
-
-      <AnotacoesDialog
-        open={showAnotacoes}
-        onOpenChange={setShowAnotacoes}
-        anotacoes={anotacoes}
-        onAnotacoesChange={fetchAnotacoes}
       />
 
       {/* Congratulations Modal */}
