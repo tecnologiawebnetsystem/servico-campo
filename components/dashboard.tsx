@@ -4,7 +4,6 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import AddHoursDialog from "@/components/add-hours-dialog"
-import AnotacoesDialog from "@/components/anotacoes-dialog"
 import CongratulationsModal from "@/components/congratulations-modal"
 import HoursGrid from "@/components/hours-grid"
 import { decimalToMinutes, minutesToHoursString } from "@/lib/time-utils"
@@ -28,11 +27,6 @@ export interface HourEntry {
   date: string
 }
 
-interface Anotacao {
-  id: number
-  note: string
-}
-
 interface Usuario {
   id: number
   nome: string
@@ -46,9 +40,7 @@ interface DashboardProps {
 export default function Dashboard({ onLogout, usuario }: DashboardProps) {
   const [currentDate, setCurrentDate] = useState(new Date())
   const [entries, setEntries] = useState<HourEntry[]>([])
-  const [anotacoes, setAnotacoes] = useState<Anotacao[]>([])
   const [showAddHours, setShowAddHours] = useState(false)
-  const [showAnotacoes, setShowAnotacoes] = useState(false)
   const [editingEntry, setEditingEntry] = useState<HourEntry | undefined>()
   const [online, setOnline] = useState(true)
   const [syncing, setSyncing] = useState(false)
@@ -85,7 +77,6 @@ export default function Dashboard({ onLogout, usuario }: DashboardProps) {
         await syncOfflineData(usuario.id)
         setSyncing(false)
         fetchEntries()
-        fetchAnotacoes()
         fetchEstudos()
       }
     })
@@ -110,7 +101,6 @@ export default function Dashboard({ onLogout, usuario }: DashboardProps) {
 
   useEffect(() => {
     fetchEntries()
-    fetchAnotacoes()
     fetchEstudos()
   }, [currentDate])
 
@@ -142,16 +132,6 @@ export default function Dashboard({ onLogout, usuario }: DashboardProps) {
       saveOfflineData(`horas_${usuario.id}_${currentDate.getMonth()}_${currentDate.getFullYear()}`, horasFormatadas)
     } catch (error) {
       console.error("Erro ao buscar horas:", error)
-    }
-  }
-
-  const fetchAnotacoes = async () => {
-    try {
-      const res = await fetch(`/api/anotacoes?usuarioId=${usuario.id}`)
-      const data = await res.json()
-      setAnotacoes(Array.isArray(data) ? data : [])
-    } catch (error) {
-      console.error("Erro ao buscar anotações:", error)
     }
   }
 
@@ -461,7 +441,6 @@ export default function Dashboard({ onLogout, usuario }: DashboardProps) {
               usuarioId={usuario.id}
               onSyncComplete={() => {
                 fetchEntries()
-                fetchAnotacoes()
                 fetchEstudos()
               }}
             />
@@ -570,7 +549,7 @@ export default function Dashboard({ onLogout, usuario }: DashboardProps) {
           </Card>
 
           {/* Action Buttons */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
             <Button
               onClick={() => {
                 setEditingEntry(undefined)
@@ -580,17 +559,6 @@ export default function Dashboard({ onLogout, usuario }: DashboardProps) {
             >
               {/* Add hours button */}
               Adicionar Horas
-            </Button>
-
-            <Button
-              onClick={() => setShowAnotacoes(true)}
-              className="gap-1 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white shadow-lg h-20 text-sm font-semibold w-full flex flex-col"
-            >
-              <div className="flex items-center gap-2">
-                {/* StickyNote icon */}
-                <span>Anotações</span>
-              </div>
-              <span className="text-xs opacity-90">({anotacoes.length} anotações)</span>
             </Button>
 
             <a
@@ -621,13 +589,6 @@ export default function Dashboard({ onLogout, usuario }: DashboardProps) {
         editingEntry={editingEntry}
         currentMonth={currentMonth}
         currentYear={currentYear}
-      />
-
-      <AnotacoesDialog
-        open={showAnotacoes}
-        onOpenChange={setShowAnotacoes}
-        anotacoes={anotacoes}
-        onAnotacoesChange={fetchAnotacoes}
       />
 
       {/* Congratulations Modal */}
