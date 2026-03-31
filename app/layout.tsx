@@ -33,6 +33,7 @@ export const viewport: Viewport = {
   maximumScale: 1,
   userScalable: false,
   themeColor: "#ec4899",
+  viewportFit: "cover",
 }
 
 export default function RootLayout({
@@ -45,6 +46,11 @@ export default function RootLayout({
       <head>
         <link rel="icon" href="/icon-192.jpg" type="image/jpeg" />
         <link rel="apple-touch-icon" href="/apple-icon.png" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="apple-mobile-web-app-title" content="Serviço Campo" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="format-detection" content="telephone=no" />
         <script
           dangerouslySetInnerHTML={{
             __html: `
