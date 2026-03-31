@@ -8,7 +8,6 @@ import CartasDialog from "@/components/cartas-dialog"
 import AnotacoesDialog from "@/components/anotacoes-dialog"
 import CongratulationsModal from "@/components/congratulations-modal"
 import HoursGrid from "@/components/hours-grid"
-import Stopwatch from "@/components/stopwatch"
 import { decimalToMinutes, minutesToHoursString } from "@/lib/time-utils"
 import {
   isOnline,
@@ -521,7 +520,7 @@ export default function Dashboard({ onLogout, usuario }: DashboardProps) {
 
         {/* Conteúdo principal */}
         <div className="p-4 md:p-6 space-y-6">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             <Card className="p-4 bg-gradient-to-br from-pink-100 to-rose-100 border-pink-200 relative overflow-hidden shadow-md">
               <div className="relative">
                 <p className="text-xs text-rose-700 font-medium mb-1">Total de Horas</p>
@@ -538,7 +537,7 @@ export default function Dashboard({ onLogout, usuario }: DashboardProps) {
               </div>
             </Card>
 
-            <Card className="p-4 bg-gradient-to-br from-purple-100 to-pink-100 border-purple-200 relative overflow-hidden shadow-md">
+            <Card className="p-4 bg-gradient-to-br from-purple-100 to-pink-100 border-purple-200 relative overflow-hidden shadow-md col-span-2 md:col-span-1">
               <div className="relative">
                 <p className="text-xs text-purple-700 font-medium mb-1">Estudos Bíblicos</p>
                 <div className="flex items-center gap-2">
@@ -563,10 +562,6 @@ export default function Dashboard({ onLogout, usuario }: DashboardProps) {
                 </div>
                 <p className="text-xs text-purple-600 mt-1">este mês</p>
               </div>
-            </Card>
-
-            <Card className="p-4 bg-gradient-to-br from-emerald-100 to-teal-100 border-emerald-200 relative overflow-hidden shadow-md">
-              <Stopwatch usuarioId={usuario.id} />
             </Card>
           </div>
 
